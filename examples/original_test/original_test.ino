@@ -223,12 +223,14 @@ SX1262_Operator SX1262_OP;
 SPIClass Custom_SPI_3(NRF_SPIM3, SX1262_MISO, SX1262_SCLK, SX1262_MOSI);
 SX1262 radio = new Module(SX1262_CS, SX1262_DIO1, SX1262_RST, SX1262_BUSY, Custom_SPI_3);
 
+auto Nrf52840_Gnss = std::make_shared<Cpp_Bus_Driver::Gnss>();
+
 void log_printf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
 
-    char buffer[128];
+    char buffer[512];
     vsnprintf(buffer, sizeof(buffer), fmt, args);
 
     Serial.print(buffer);
@@ -917,88 +919,96 @@ void loop()
                 Gps_Positioning_Time++;
             }
 
-            while (Serial2.available() > 0)
+            // 检查Serial2是否有可用数据
+            if (Serial2.available())
             {
-                int buffer = Serial2.read();
+                // 读取Serial2所有可用数据到缓冲区
+                const size_t bufferSize = 512;
 
-                // 将所有Serial2.read()的数据收集到一个缓冲区
-                static char gps_buffer[128];
-                static size_t gps_buffer_len = 0;
+                std::unique_ptr<uint8_t[]> buffer(new uint8_t[bufferSize]);
+                size_t bytesRead = 0;
 
-                // 只收集可打印字符，避免乱码
-                if (buffer >= 32 && buffer <= 126 && gps_buffer_len < sizeof(gps_buffer) - 1)
+                while (Serial2.available() && bytesRead < bufferSize)
                 {
-                    gps_buffer[gps_buffer_len++] = (char)buffer;
+                    buffer[bytesRead++] = Serial2.read();
                 }
 
-                // 如果遇到换行或缓冲区满，输出并清空
-                if (buffer == '\n' || gps_buffer_len == sizeof(gps_buffer) - 1)
+                buffer[bytesRead] = '\0';
+
+                // 打印RMC的相关信息
+                log_printf("---begin---\n%s \n---end---\n", buffer.get());
+
+                log_printf("---RMC---\n");
+
+                // 创建Rmc对象用于存储解析结果
+                Cpp_Bus_Driver::Gnss::Rmc rmc;
+
+                display.clearDisplay();
+                display.setCursor(0, 0);
+
+                if (Gps_Positioning_Flag == false)
                 {
-                    gps_buffer[gps_buffer_len] = '\0';
-                    log_printf("---gps data begin---\n");
-                    log_printf("%s\n", gps_buffer);
-                    log_printf("---gps data end---\n");
-                    gps_buffer_len = 0;
+                    display.printf("Gps N:%ds", Gps_Positioning_Time);
+                    log_printf("Gps N:%ds\n", Gps_Positioning_Time);
+                }
+                else
+                {
+                    display.printf("Gps Y:%d s", Gps_Positioning_Time);
+                    log_printf("Gps Y:%d s\n", Gps_Positioning_Time);
                 }
 
-                if (gps.encode(buffer))
+                // 调用parse_rmc_info进行解码
+                if (Nrf52840_Gnss->parse_rmc_info(buffer.get(), bytesRead, rmc) == true)
                 {
-                    display.clearDisplay();
-                    display.setCursor(0, 0);
+                    log_printf("location status: %s\n", (rmc.location_status).c_str());
 
-                    if (Gps_Positioning_Flag == false)
+                    if (rmc.data.update_flag == true)
                     {
-                        display.printf("Gps N:%ds", Gps_Positioning_Time);
-                        display.display();
-                        log_printf("Gps N:%ds\n", Gps_Positioning_Time);
+                        log_printf("utc data year: %d month: %d day: %d\n", rmc.data.year, rmc.data.month, rmc.data.day);
+                        rmc.data.update_flag = false;
                     }
-                    else
+                    if (rmc.utc.update_flag == true)
                     {
-                        display.printf("Gps Y:%d s", Gps_Positioning_Time);
-                        display.display();
-                        log_printf("Gps Y:%d s\n", Gps_Positioning_Time);
+                        log_printf("utc hour: %d minute: %d second: %f\n", rmc.utc.hour, rmc.utc.minute, rmc.utc.second);
+                        log_printf("china hour: %d minute: %d second: %f\n", (rmc.utc.hour + 8 + 24) % 24, rmc.utc.minute, rmc.utc.second);
+                        rmc.utc.update_flag = false;
                     }
 
-                    if (gps.date.isValid())
+                    if ((rmc.location.lat.update_flag == true) && (rmc.location.lat.direction_update_flag == true))
                     {
-                        log_printf("data: %04d/%02d/%02d\n", gps.date.year(), gps.date.month(), gps.date.day());
-                    }
-                    else
-                    {
-                        log_printf("data: invalid\n");
-                    }
+                        log_printf("location lat degrees: %d \nlocation lat minutes: %.10lf \nlocation lat degrees_minutes: %.10lf \nlocation lat direction: %s\n",
+                                   rmc.location.lat.degrees, rmc.location.lat.minutes, rmc.location.lat.degrees_minutes, (rmc.location.lat.direction).c_str());
+                        rmc.location.lat.update_flag = false;
+                        rmc.location.lat.direction_update_flag = false;
 
-                    if (gps.time.isValid())
-                    {
-                        log_printf("time: %02d:%02d:%02d\n", gps.time.hour(), gps.time.minute(), gps.time.second());
-                        log_printf("china time: %02d:%02d:%02d\n", (gps.time.hour() + 8 + 24) % 24, gps.time.minute(), gps.time.second());
-                    }
-                    else
-                    {
-                        log_printf("time: invalid\n");
-                    }
-
-                    display.setCursor(0, 10);
-                    if (gps.location.isValid())
-                    {
-                        display.printf("%.6f", gps.location.lat());
-                        display.setCursor(0, 20);
-                        display.printf("%.6f", gps.location.lng());
-                        display.display();
-
-                        log_printf("location lat: %.6f lng: %.6f\n", gps.location.lat(), gps.location.lng());
+                        display.setCursor(0, 10);
+                        display.printf("%.6f", rmc.location.lat.degrees_minutes);
 
                         Gps_Positioning_Flag = true;
                     }
-                    else
+                    if ((rmc.location.lon.update_flag == true) && (rmc.location.lon.direction_update_flag == true))
                     {
-                        display.printf("invalid");
-                        display.setCursor(0, 20);
-                        display.printf("invalid");
-                        display.display();
+                        log_printf("location lon degrees: %d \nlocation lon minutes: %.10lf \nlocation lon degrees_minutes: %.10lf \nlocation lon direction: %s\n",
+                                   rmc.location.lon.degrees, rmc.location.lon.minutes, rmc.location.lon.degrees_minutes, (rmc.location.lon.direction).c_str());
+                        rmc.location.lon.update_flag = false;
+                        rmc.location.lon.direction_update_flag = false;
 
-                        log_printf("location: invalid\n");
+                        display.setCursor(0, 20);
+                        display.printf("%.6f", rmc.location.lon.degrees_minutes);
+
+                        Gps_Positioning_Flag = true;
                     }
+
+                    display.display();
+                }
+                else
+                {
+                    display.printf("invalid");
+                    display.setCursor(0, 20);
+                    display.printf("invalid");
+                    display.display();
+
+                    log_printf("gps data: read fail\n");
                 }
             }
 

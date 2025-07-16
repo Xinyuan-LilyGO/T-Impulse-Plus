@@ -50,6 +50,8 @@ void loop()
                 buffer[bytesRead++] = Serial2.read();
             }
 
+            buffer[bytesRead] = '\0';
+
             // 打印RMC的相关信息
             printf("---begin---\n%s \n---end---\n", buffer.get());
 
