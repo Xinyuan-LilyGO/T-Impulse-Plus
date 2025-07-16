@@ -1,0 +1,72 @@
+/*
+ * @Description: None
+ * @Author: LILYGO
+ * @Date: 2024-12-06 14:37:43
+ * @LastEditTime: 2025-07-16 16:29:09
+ * @License: GPL 3.0
+ */
+#pragma once
+
+#define _PINNUM(port, pin) ((port) * 32 + (pin))
+
+// IIC
+#define IIC_SDA_1 _PINNUM(1, 8)
+#define IIC_SCL_1 _PINNUM(0, 11)
+#define IIC_SDA_2 _PINNUM(0, 15)
+#define IIC_SCL_2 _PINNUM(0, 20)
+
+// ZD25WQ32CEIGR SPI
+#define ZD25WQ32C_CS _PINNUM(0, 12)
+#define ZD25WQ32C_SCLK _PINNUM(0, 4)
+#define ZD25WQ32C_MOSI _PINNUM(0, 6)
+#define ZD25WQ32C_MISO _PINNUM(1, 9)
+#define ZD25WQ32C_IO0 _PINNUM(0, 6)
+#define ZD25WQ32C_IO1 _PINNUM(1, 9)
+#define ZD25WQ32C_IO2 _PINNUM(0, 8)
+#define ZD25WQ32C_IO3 _PINNUM(0, 26)
+
+// SSD1306
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define SCREEN_ADDRESS 0x3C
+#define SCREEN_RST -1
+#define SCREEN_SDA IIC_SDA_2
+#define SCREEN_SCL IIC_SCL_2
+
+// Lora S62F(SX1262)
+#define SX1262_CS _PINNUM(1, 14)
+#define SX1262_RST _PINNUM(0, 2)
+#define SX1262_SCLK _PINNUM(0, 3)
+#define SX1262_MOSI _PINNUM(0, 28)
+#define SX1262_MISO _PINNUM(0, 30)
+#define SX1262_BUSY _PINNUM(0, 31)
+#define SX1262_INT _PINNUM(0, 29)
+#define SX1262_DIO1 _PINNUM(0, 29)
+#define SX1262_DIO2 _PINNUM(1, 15)
+#define SX1262_RF_VC1 _PINNUM(1, 13)
+#define SX1262_RF_VC2 _PINNUM(1, 7)
+
+// BOOT
+#define nRF52840_BOOT _PINNUM(0, 24)
+
+// Battery
+#define BATTERY_MEASUREMENT_CONTROL _PINNUM(0, 25)
+#define BATTERY_ADC_DATA _PINNUM(0, 5)
+
+// RT9080
+#define RT9080_EN _PINNUM(0, 14)
+
+// GPS
+#define GPS_1PPS _PINNUM(1, 10)
+#define GPS_UART_RX _PINNUM(1, 11)
+#define GPS_UART_TX _PINNUM(1, 12)
+
+// ICM20948
+#define ICM20948_ADDRESS 0x69
+#define ICM20948_SDA IIC_SDA_1
+#define ICM20948_SCL IIC_SCL_1
+#define ICM20948_INT _PINNUM(0, 7)
+
+// TTP223
+#define TTP223_EN _PINNUM(0, 13)
+#define TTP223_KEY _PINNUM(1, 4)
