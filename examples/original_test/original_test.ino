@@ -964,13 +964,13 @@ void loop()
 
                     if (rmc.data.update_flag == true)
                     {
-                        log_printf("utc data year: %d month: %d day: %d\n", rmc.data.year, rmc.data.month, rmc.data.day);
+                        log_printf("utc data: %d/%d/%d\n", rmc.data.year + 2000, rmc.data.month, rmc.data.day);
                         rmc.data.update_flag = false;
                     }
                     if (rmc.utc.update_flag == true)
                     {
-                        log_printf("utc hour: %d minute: %d second: %f\n", rmc.utc.hour, rmc.utc.minute, rmc.utc.second);
-                        log_printf("china hour: %d minute: %d second: %f\n", (rmc.utc.hour + 8 + 24) % 24, rmc.utc.minute, rmc.utc.second);
+                        log_printf("utc time: %d:%d:%.02f\n", rmc.utc.hour, rmc.utc.minute, rmc.utc.second);
+                        log_printf("china time: %d:%d:%.02f\n", (rmc.utc.hour + 8 + 24) % 24, rmc.utc.minute, rmc.utc.second);
                         rmc.utc.update_flag = false;
                     }
 
