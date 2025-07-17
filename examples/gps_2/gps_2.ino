@@ -2,7 +2,7 @@
  * @Description: GPS test
  * @Author: LILYGO_L
  * @Date: 2024-10-25 17:57:30
- * @LastEditTime: 2025-07-16 18:17:20
+ * @LastEditTime: 2025-07-17 08:56:35
  * @License: GPL 3.0
  */
 #include "cpp_bus_driver_library.h"
@@ -71,8 +71,8 @@ void loop()
                 }
                 if (rmc.utc.update_flag == true)
                 {
-                    printf("utc time: %d:%d:%.02f\n", rmc.utc.hour, rmc.utc.minute, rmc.utc.second);
-                    printf("china time: %d:%d:%.02f\n", (rmc.utc.hour + 8 + 24) % 24, rmc.utc.minute, rmc.utc.second);
+                    printf("utc time: %d:%d:%.03f\n", rmc.utc.hour, rmc.utc.minute, rmc.utc.second);
+                    printf("china time: %d:%d:%.03f\n", (rmc.utc.hour + 8 + 24) % 24, rmc.utc.minute, rmc.utc.second);
                     rmc.utc.update_flag = false;
                 }
 
