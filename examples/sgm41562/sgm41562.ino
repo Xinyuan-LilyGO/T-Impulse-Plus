@@ -2,46 +2,33 @@
  * @Description: IIC Scan
  * @Author: LILYGO_L
  * @Date: 2024-03-26 15:51:59
- * @LastEditTime: 2025-07-14 14:25:11
+ * @LastEditTime: 2025-07-17 12:07:58
  * @License: GPL 3.0
  */
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_TinyUSB.h>
 #include "pin_config.h"
+#include "cpp_bus_driver_library.h"
 
-#define SDA IIC_SDA_2
-#define SCL IIC_SCL_2
+auto Sgm41562_IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SGM41562_SDA, SGM41562_SCL, &Wire);
 
-void scan_i2c_device(TwoWire &i2c)
-{
-    Serial.println("Scanning for I2C devices ...");
-    Serial.print("      ");
-    for (int i = 0; i < 0x10; i++)
-    {
-        Serial.printf("0x%02X|", i);
-    }
-    uint8_t error;
-    for (int j = 0; j < 0x80; j += 0x10)
-    {
-        Serial.println();
-        Serial.printf("0x%02X |", j);
-        for (int i = 0; i < 0x10; i++)
-        {
-            Wire.beginTransmission(i | j);
-            error = Wire.endTransmission();
-            if (error == 0)
-                Serial.printf("0x%02X|", i | j);
-            else
-                Serial.print(" -- |");
-        }
-    }
-    Serial.println();
-}
+auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS, DEFAULT_CPP_BUS_DRIVER_VALUE);
 
 void setup()
 {
     Serial.begin(115200);
+    uint8_t serial_init_count = 0;
+    while (!Serial)
+    {
+        delay(100); // wait for native usb
+        serial_init_count++;
+        if (serial_init_count > 30)
+        {
+            break;
+        }
+    }
+
     Serial.println("Ciallo");
 
     // 3.3V Power ON
@@ -50,13 +37,11 @@ void setup()
 
     pinMode(ICM20948_INT, INPUT_PULLUP);
 
-    Wire.setPins(SDA, SCL);
-    Wire.begin();
-    scan_i2c_device(Wire);
+    Sgm41562->begin();
 }
 
 void loop()
 {
-    scan_i2c_device(Wire);
+    // scan_i2c_device(Wire);
     delay(1000);
 }

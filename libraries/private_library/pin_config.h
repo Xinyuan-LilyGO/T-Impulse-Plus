@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO
  * @Date: 2024-12-06 14:37:43
- * @LastEditTime: 2025-07-16 16:29:09
+ * @LastEditTime: 2025-07-17 13:36:45
  * @License: GPL 3.0
  */
 #pragma once
@@ -70,3 +70,9 @@
 // TTP223
 #define TTP223_EN _PINNUM(0, 13)
 #define TTP223_KEY _PINNUM(1, 4)
+
+// SGM41562
+#define SGM41562_ADDRESS 0x03
+#define SGM41562_SDA IIC_SDA_1
+#define SGM41562_SCL IIC_SCL_1
+#define SGM41562_INT _PINNUM(0, 16)

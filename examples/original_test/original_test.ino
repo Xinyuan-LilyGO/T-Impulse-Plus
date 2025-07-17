@@ -223,7 +223,7 @@ SX1262_Operator SX1262_OP;
 SPIClass Custom_SPI_3(NRF_SPIM3, SX1262_MISO, SX1262_SCLK, SX1262_MOSI);
 SX1262 radio = new Module(SX1262_CS, SX1262_DIO1, SX1262_RST, SX1262_BUSY, Custom_SPI_3);
 
-auto Nrf52840_Gnss = std::make_shared<Cpp_Bus_Driver::Gnss>();
+auto Nrf52840_Gnss = std::make_unique<Cpp_Bus_Driver::Gnss>();
 
 void log_printf(const char *fmt, ...)
 {
