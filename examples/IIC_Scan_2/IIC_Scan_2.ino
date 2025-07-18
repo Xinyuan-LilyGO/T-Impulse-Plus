@@ -2,7 +2,7 @@
  * @Description: IIC Scan
  * @Author: LILYGO_L
  * @Date: 2024-03-26 15:51:59
- * @LastEditTime: 2025-07-17 13:36:54
+ * @LastEditTime: 2025-07-17 15:15:42
  * @License: GPL 3.0
  */
 #include <Arduino.h>
@@ -62,8 +62,6 @@ void setup()
     // 3.3V Power ON
     pinMode(RT9080_EN, OUTPUT);
     digitalWrite(RT9080_EN, HIGH);
-
-    pinMode(ICM20948_INT, INPUT_PULLUP);
 
     IIC_Bus->begin();
 
