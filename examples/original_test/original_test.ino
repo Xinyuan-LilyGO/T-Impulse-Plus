@@ -9,6 +9,7 @@
 #include "ICM20948_WE.h"
 #include "RadioLib.h"
 #include "cpp_bus_driver_library.h"
+#include "wiring.h"
 
 enum class System_Window
 {
@@ -70,6 +71,8 @@ struct BLE_Uart_Operator
 struct System_Operator
 {
     size_t time = 0;
+
+    uint8_t sleep_count = 0;
 
     struct
     {
@@ -224,6 +227,10 @@ SPIClass Custom_SPI_3(NRF_SPIM3, SX1262_MISO, SX1262_SCLK, SX1262_MOSI);
 SX1262 radio = new Module(SX1262_CS, SX1262_DIO1, SX1262_RST, SX1262_BUSY, Custom_SPI_3);
 
 auto Nrf52840_Gnss = std::make_unique<Cpp_Bus_Driver::Gnss>();
+
+auto Sgm41562_IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SGM41562_SDA, SGM41562_SCL, &Wire);
+
+auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS, DEFAULT_CPP_BUS_DRIVER_VALUE);
 
 void log_printf(const char *fmt, ...)
 {
@@ -407,6 +414,9 @@ void Window_Init(System_Window Window)
 {
     switch (Window)
     {
+    case System_Window::HOME:
+        System_Op.sleep_count = 0;
+        break;
     case System_Window::FLASH_TEST:
         // Custom_SPI.setClockDivider(SPI_CLOCK_DIV2); // dual frequency 32MHz
 
@@ -435,6 +445,15 @@ void Window_Init(System_Window Window)
                 Nrf52840_Boot_Key_Trigger_Flag = true;
             },
             FALLING);
+
+        if (Sgm41562->begin() == false)
+        {
+            log_printf("Sgm41562 init fail\n");
+        }
+        else
+        {
+            log_printf("Sgm41562 init successful\n");
+        }
 
         // Measure battery
         pinMode(BATTERY_ADC_DATA, INPUT);
@@ -639,6 +658,7 @@ void Window_End(System_Window Window)
     case System_Window::BATTERY_TEST:
         detachInterrupt(nRF52840_BOOT);
         digitalWrite(BATTERY_MEASUREMENT_CONTROL, LOW); // Turn off battery voltage measurement
+        Sgm41562->end();
         CycleTime = 0;
         break;
     case System_Window::IMU_TEST:
@@ -670,6 +690,62 @@ void Window_End(System_Window Window)
         break;
     }
 }
+void System_Sleep(bool mode)
+{
+    if (mode == true)
+    {
+        Serial.end();
+        detachInterrupt(TTP223_KEY);
+        pinMode(TTP223_EN, INPUT_PULLDOWN);
+
+        pinMode(SCREEN_SDA, INPUT);
+        pinMode(SCREEN_SCL, INPUT);
+        Wire1.end();
+
+        digitalWrite(RT9080_EN, LOW);
+        pinMode(RT9080_EN, INPUT_PULLDOWN);
+    }
+    else
+    {
+        Serial.begin(115200);
+
+        // 3.3V Power ON
+        pinMode(RT9080_EN, OUTPUT);
+        digitalWrite(RT9080_EN, HIGH);
+        // 电源开启后必须延时
+        delay(100);
+
+        pinMode(TTP223_EN, OUTPUT);
+        digitalWrite(TTP223_EN, HIGH);
+
+        attachInterrupt(
+            TTP223_KEY,
+            []
+            {
+                Ttp223_Key_Trigger_Flag = true;
+            },
+            RISING);
+
+        Wire1.setPins(SCREEN_SDA, SCREEN_SCL);
+        Wire1.begin();
+        if (display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS) == false)
+        {
+            log_printf("SSD1306 init fail\n");
+            System_Op.init_flag.screen = false;
+        }
+        else
+        {
+            log_printf("SSD1306 init successful\n");
+            System_Op.init_flag.screen = true;
+        }
+
+        display.setOffsetCursor(32, 32);
+        display.clearDisplay();
+        display.setTextColor(WHITE);
+
+        display.display();
+    }
+}
 
 void setup()
 {
@@ -689,6 +765,8 @@ void setup()
     // 3.3V Power ON
     pinMode(RT9080_EN, OUTPUT);
     digitalWrite(RT9080_EN, HIGH);
+    // 电源开启后必须延时
+    delay(100);
 
     pinMode(TTP223_EN, OUTPUT);
     digitalWrite(TTP223_EN, HIGH);
@@ -706,33 +784,212 @@ void setup()
     if (BLE_Uart_Initialization() == true)
     {
         BLE_Uart_Op.initialization_flag = true;
-        Serial.println("BLE_Uart_Initialization successful");
+        log_printf("BLE_Uart_Initialization successful\n");
     }
     else
     {
         BLE_Uart_Op.initialization_flag = false;
-        Serial.println("BLE_Uart_Initialization fail");
+        log_printf("BLE_Uart_Initialization fail\n");
     }
+
+    if (Sgm41562->begin() == false)
+    {
+        log_printf("Sgm41562 init fail\n");
+    }
+    else
+    {
+        log_printf("Sgm41562 init successful\n");
+    }
+    Sgm41562->end();
+
+    flash.begin();
+    flashTransport.setClockSpeed(32000000UL, 0);
+    flashTransport.runCommand(0xAB); // Exit deep sleep mode
+    if (flash.begin(&ZD25WQ32C) == false)
+    {
+        log_printf("flash init fail\n");
+        System_Op.init_flag.flash = false;
+    }
+    else
+    {
+        log_printf("flash init successful\n");
+        System_Op.init_flag.flash = true;
+    }
+    flashTransport.runCommand(0xB9); // Flash Deep Sleep
+    flash.end();
+    pinMode(ZD25WQ32C_SCLK, INPUT);
+    pinMode(ZD25WQ32C_CS, INPUT);
+    pinMode(ZD25WQ32C_IO0, INPUT);
+    pinMode(ZD25WQ32C_IO1, INPUT);
+    pinMode(ZD25WQ32C_IO2, INPUT);
+    pinMode(ZD25WQ32C_IO3, INPUT);
+
+    Wire.setPins(ICM20948_SDA, ICM20948_SCL);
+    Wire.begin();
+    if (myIMU.init() == false)
+    {
+        log_printf("ICM20948 AG init fail\n");
+        System_Op.init_flag.imu = false;
+    }
+    else
+    {
+        myIMU.sleep(false);
+        if (myIMU.initMagnetometer() == false)
+        {
+            log_printf("ICM20948 M init fail\n");
+            System_Op.init_flag.imu = false;
+        }
+
+        log_printf("ICM20948 init successful\n");
+        System_Op.init_flag.imu = true;
+
+        /*  This is a method to calibrate. You have to determine the minimum and maximum
+         *  raw acceleration values of the axes determined in the range +/- 2 g.
+         *  You call the function as follows: setAccOffsets(xMin,xMax,yMin,yMax,zMin,zMax);
+         *  The parameters are floats.
+         *  The calibration changes the slope / ratio of raw acceleration vs g. The zero point
+         *  is set as (min + max)/2.
+         */
+        // myIMU.setAccOffsets(-16330.0, 16450.0, -16600.0, 16180.0, -16520.0, 16690.0);
+
+        /* The starting point, if you position the ICM20948 flat, is not necessarily 0g/0g/1g for x/y/z.
+         * The autoOffset function measures offset. It assumes your ICM20948 is positioned flat with its
+         * x,y-plane. The more you deviate from this, the less accurate will be your results.
+         * It overwrites the zero points of setAccOffsets, but keeps the correction of the slope.
+         * The function also measures the offset of the gyroscope data. The gyroscope offset does not
+         * depend on the positioning.
+         * This function needs to be called after setAccsOffsets but before other settings since it will
+         * overwrite settings!
+         * You can query the offsets with the functions:
+         * xyzFloat getAccOffsets() and xyzFloat getGyrOffsets()
+         * You can apply the offsets using:
+         * setAccOffsets(xyzFloat yourOffsets) and setGyrOffsets(xyzFloat yourOffsets)
+         */
+        log_printf("position your icm20948 flat and don't move it - calibrating...\n");
+        delay(1000);
+        myIMU.autoOffsets();
+        log_printf("done!\n");
+
+        /* enables or disables the acceleration sensor, default: enabled */
+        // myIMU.enableAcc(true);
+
+        /*  ICM20948_ACC_RANGE_2G      2 g   (default)
+         *  ICM20948_ACC_RANGE_4G      4 g
+         *  ICM20948_ACC_RANGE_8G      8 g
+         *  ICM20948_ACC_RANGE_16G    16 g
+         */
+        myIMU.setAccRange(ICM20948_ACC_RANGE_2G);
+
+        /*  Choose a level for the Digital Low Pass Filter or switch it off.
+         *  ICM20948_DLPF_0, ICM20948_DLPF_2, ...... ICM20948_DLPF_7, ICM20948_DLPF_OFF
+         *
+         *  IMPORTANT: This needs to be ICM20948_DLPF_7 if DLPF is used in cycle mode!
+         *
+         *  DLPF       3dB Bandwidth [Hz]      Output Rate [Hz]
+         *    0              246.0               1125/(1+ASRD)
+         *    1              246.0               1125/(1+ASRD)
+         *    2              111.4               1125/(1+ASRD)
+         *    3               50.4               1125/(1+ASRD)
+         *    4               23.9               1125/(1+ASRD)
+         *    5               11.5               1125/(1+ASRD)
+         *    6                5.7               1125/(1+ASRD)
+         *    7              473.0               1125/(1+ASRD)
+         *    OFF           1209.0               4500
+         *
+         *    ASRD = Accelerometer Sample Rate Divider (0...4095)
+         *    You achieve lowest noise using level 6
+         */
+        myIMU.setAccDLPF(ICM20948_DLPF_6);
+
+        /*  Acceleration sample rate divider divides the output rate of the accelerometer.
+         *  Sample rate = Basic sample rate / (1 + divider)
+         *  It can only be applied if the corresponding DLPF is not off!
+         *  Divider is a number 0...4095 (different range compared to gyroscope)
+         *  If sample rates are set for the accelerometer and the gyroscope, the gyroscope
+         *  sample rate has priority.
+         */
+        // myIMU.setAccSampleRateDivider(10);
+
+        /* You can set the following modes for the magnetometer:
+         * AK09916_PWR_DOWN          Power down to save energy
+         * AK09916_TRIGGER_MODE      Measurements on request, a measurement is triggered by
+         *                           calling setMagOpMode(AK09916_TRIGGER_MODE)
+         * AK09916_CONT_MODE_10HZ    Continuous measurements, 10 Hz rate
+         * AK09916_CONT_MODE_20HZ    Continuous measurements, 20 Hz rate
+         * AK09916_CONT_MODE_50HZ    Continuous measurements, 50 Hz rate
+         * AK09916_CONT_MODE_100HZ   Continuous measurements, 100 Hz rate (default)
+         */
+        myIMU.setMagOpMode(AK09916_CONT_MODE_20HZ);
+    }
+    myIMU.sleep(true);
+    Wire.end();
+    pinMode(ICM20948_SDA, INPUT);
+    pinMode(ICM20948_SCL, INPUT);
+
+    Custom_SPI_3.begin();
+    Custom_SPI_3.setClockDivider(SPI_CLOCK_DIV2);
+    int16_t state = radio.begin();
+    if (state != RADIOLIB_ERR_NONE)
+    {
+        log_printf("sx1262 init fail\n");
+        log_printf("error code: %d\n", state);
+
+        System_Op.init_flag.lora = false;
+    }
+    else
+    {
+        log_printf("sx1262 init successful\n");
+
+        radio.setRfSwitchPins(SX1262_RF_VC2, SX1262_RF_VC1);
+
+        radio.setDio1Action([]()
+                            { SX1262_OP.operation_flag = true; });
+
+        String buffer_str;
+        if (SX1262_Set_Default_Parameters(&buffer_str) == false)
+        {
+            log_printf("sx1262 failed to set default parameters\n");
+            log_printf("sx1262 assertion: %s\n", buffer_str.c_str());
+            System_Op.init_flag.lora = false;
+        }
+
+        if (radio.startReceive() != RADIOLIB_ERR_NONE)
+        {
+            log_printf("sx1262 failed to start receive\n");
+        }
+    }
+    radio.sleep();
+    Custom_SPI_3.end();
+    pinMode(SX1262_MISO, INPUT);
+    pinMode(SX1262_MOSI, INPUT);
+    pinMode(SX1262_SCLK, INPUT);
+    pinMode(SX1262_CS, INPUT);
+    pinMode(SX1262_DIO1, INPUT);
+    pinMode(SX1262_RST, INPUT);
+    pinMode(SX1262_BUSY, INPUT);
 
     Wire1.setPins(SCREEN_SDA, SCREEN_SCL);
     Wire1.begin();
-
     // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
     if (display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS) == false)
     {
-        Serial.println("SSD1306 init fail");
+        log_printf("SSD1306 init fail\n");
         System_Op.init_flag.screen = false;
     }
     else
     {
-        Serial.println("SSD1306 init successful");
+        log_printf("SSD1306 init successful\n");
         System_Op.init_flag.screen = true;
     }
 
     display.setOffsetCursor(32, 32);
     display.clearDisplay();
     display.setTextColor(WHITE);
+    display.fillScreen(WHITE);
+    display.display();
 
+    delay(3000);
+    display.clearDisplay();
     display.display();
 
     Window_Init(Current_Window);
@@ -783,6 +1040,46 @@ void loop()
             log_printf("system time: %02d:%02d:%02d\n", hours, minutes, seconds);
 
             display.display();
+
+            System_Op.sleep_count++;
+            if (System_Op.sleep_count > 10)
+            {
+                display.clearDisplay();
+                display.setCursor(15, 10);
+                display.printf("sleep");
+                display.display();
+
+                log_printf("sleep\n");
+
+                delay(1000);
+
+                System_Sleep(true);
+
+                pinMode(nRF52840_BOOT, INPUT);
+
+                while (1) // 开始睡眠
+                {
+                    waitForEvent();
+
+                    systemOff(nRF52840_BOOT, LOW);
+                    delay(1000);
+
+                    if (digitalRead(nRF52840_BOOT) == LOW)
+                    {
+                        System_Sleep(false);
+
+                        display.clearDisplay();
+                        display.setCursor(10, 10);
+                        display.printf("wake up");
+                        display.display();
+
+                        log_printf("wake up\n");
+
+                        Window_Init(Current_Window);
+                        break;
+                    }
+                }
+            }
 
             CycleTime = millis() + 1000;
         }
@@ -845,6 +1142,8 @@ void loop()
         {
             float battery_voltage = (((float)analogRead(BATTERY_ADC_DATA) * ((3000.0 / 4096.0))) / 1000.0) * 2.0;
 
+            log_printf("---battery---\n");
+
             display.clearDisplay();
             display.setCursor(0, 0);
             display.printf("Battery");
@@ -865,6 +1164,59 @@ void loop()
             display.display();
 
             log_printf("battery voltage: %.03f v\n", battery_voltage);
+
+            log_printf("---sgm41562---\n");
+
+            Cpp_Bus_Driver::Sgm41562xx::Irq_Status irq_status;
+            if (Sgm41562->parse_irq_status(Sgm41562->get_irq_flag(), irq_status))
+            {
+                log_printf("irq status:\n");
+                log_printf("  input power fault: %d\n", irq_status.Input_power_fault_flag);
+                // log_printf("  thermal shutdown: %d\n", irq_status.thermal_shutdown_flag);
+                log_printf("  battery over voltage fault: %d\n", irq_status.battery_over_voltage_fault_flag);
+                // log_printf("  safety timer expiration fault: %d\n", irq_status.safety_timer_expiration_fault_flag);
+                // log_printf("  ntc exceeding hot: %d\n", irq_status.ntc_exceeding_hot_flag);
+                // log_printf("  ntc exceeding cold: %d\n", irq_status.ntc_exceeding_cold_flag);
+            }
+            else
+            {
+                log_printf("failed to parse irq status\n");
+            }
+
+            Cpp_Bus_Driver::Sgm41562xx::Chip_Status chip_status;
+            if (Sgm41562->parse_chip_status(Sgm41562->get_chip_status(), chip_status))
+            {
+                log_printf("chip status:\n");
+                // log_printf("  watchdog expiration: %d\n", chip_status.watchdog_expiration_flag);
+                log_printf("  charge status: ");
+                switch (chip_status.charge_status)
+                {
+                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::NOT_CHARGING:
+                    log_printf("not_charging\n");
+                    break;
+                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::PRECHARGE:
+                    log_printf("precharge\n");
+                    break;
+                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::CHARGE:
+                    log_printf("charge\n");
+                    break;
+                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::CHARGE_DONE:
+                    log_printf("charge_done\n");
+                    break;
+                default:
+                    log_printf("unknown\n");
+                    break;
+                }
+                // log_printf("  power path management mode: %d\n", chip_status.device_in_power_path_management_mode_flag);
+                log_printf("  input power status: %d\n", chip_status.input_power_status_flag);
+                // log_printf("  thermal regulation: %d\n", chip_status.thermal_regulation_status_flag);
+            }
+            else
+            {
+                log_printf("failed to parse chip status\n");
+            }
+            log_printf("\n");
+
             CycleTime = millis() + 1000;
         }
         break;
@@ -1103,7 +1455,7 @@ void loop()
                             // print data of the packet
                             // for (int i = 0; i < 16; i++)
                             // {
-                            //     Serial.printf("[SX1262] Data[%d]: %#X\n", i, receive_package[i]);
+                            //    log_printf("[SX1262] Data[%d]: %#X\n", i, receive_package[i]);
                             // }
                             log_printf("[SX1262] receive_mac[0]: %#010X, receive_mac[1]: %#010X\n", temp_mac[0], temp_mac[1]);
                             log_printf("[SX1262] receive_data: %u\n", SX1262_OP.device_1.receive_data);
