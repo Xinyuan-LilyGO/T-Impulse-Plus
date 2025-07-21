@@ -11,6 +11,10 @@
 #include "cpp_bus_driver_library.h"
 #include "wiring.h"
 
+#define SOFTWARE_NAME "original_test"
+#define SOFTWARE_LASTEDITTIME "202507191341"
+#define BOARD_VERSION "v1.0"
+
 enum class System_Window
 {
     HOME = 0,
@@ -99,7 +103,7 @@ struct SX1262_Operator
 
     struct
     {
-        float value = 850.0;
+        float value = 910.0;
         bool change_flag = false;
     } frequency;
     struct
@@ -171,6 +175,33 @@ struct SX1262_Operator
     float receive_snr = 0;
 };
 
+struct Button_Triggered_Operator
+{
+    using gesture = enum {
+        NOT_ACTIVE,   // not active
+        SINGLE_CLICK, // single click
+        DOUBLE_CLICK, // double click
+        LONG_PRESS,   // long press
+    };
+    const uint32_t button_number = TTP223_KEY;
+
+    bool trigger_level = LOW;
+
+    size_t cycletime_1 = 0;
+    size_t cycletime_2 = 0;
+
+    uint8_t current_state = gesture::NOT_ACTIVE;
+    bool trigger_start_flag = false;
+    bool trigger_flag = false;
+    bool timing_flag = false;
+    int8_t paragraph_triggered_level = -1;
+    uint8_t high_triggered_count = 0;
+    uint8_t low_triggered_count = 0;
+    uint8_t paragraph_triggered_count = 0;
+
+    volatile bool Interrupt_Flag = false;
+};
+
 uint8_t Current_Window_Count = 0;
 System_Window Current_Window = System_Window::HOME;
 
@@ -178,9 +209,6 @@ bool Battery_Control_Switch = false;
 
 size_t CycleTime = 0;
 size_t CycleTime_2 = 0;
-
-volatile bool Ttp223_Key_Trigger_Flag = false;
-volatile bool Nrf52840_Boot_Key_Trigger_Flag = false;
 
 bool Gps_Positioning_Flag = false;
 size_t Gps_Positioning_Time = 0;
@@ -197,6 +225,7 @@ BLEUart bleuart; // uart over ble
 
 BLE_Uart_Operator BLE_Uart_Op;
 System_Operator System_Op;
+Button_Triggered_Operator Button_Triggered_OP;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, SCREEN_RST);
 
@@ -247,6 +276,102 @@ void log_printf(const char *fmt, ...)
     }
 
     va_end(args);
+}
+
+void Vibration_Motor_Trigger(uint32_t delay_ms)
+{
+    digitalWrite(VIBRATION_MOTOR_DATA, HIGH);
+    delay(delay_ms);
+    digitalWrite(VIBRATION_MOTOR_DATA, LOW);
+}
+
+bool Key_Scanning(void)
+{
+    if (Button_Triggered_OP.trigger_start_flag == false)
+    {
+        if (digitalRead(Button_Triggered_OP.button_number) == Button_Triggered_OP.trigger_level)
+        {
+            Button_Triggered_OP.trigger_start_flag = true;
+
+            log_printf("press button to trigger start");
+            Button_Triggered_OP.high_triggered_count = 0;
+            Button_Triggered_OP.low_triggered_count = 0;
+            Button_Triggered_OP.paragraph_triggered_count = 0;
+            Button_Triggered_OP.paragraph_triggered_level = -1;
+            Button_Triggered_OP.trigger_flag = true;
+            Button_Triggered_OP.timing_flag = true;
+        }
+    }
+    if (Button_Triggered_OP.timing_flag == true)
+    {
+        Button_Triggered_OP.cycletime_2 = millis() + 1000; // timing 1000ms off
+        Button_Triggered_OP.timing_flag = false;
+    }
+    if (Button_Triggered_OP.trigger_flag == true)
+    {
+        if (millis() > Button_Triggered_OP.cycletime_1)
+        {
+            if (digitalRead(Button_Triggered_OP.button_number) == HIGH)
+            {
+                Button_Triggered_OP.high_triggered_count++;
+                if (Button_Triggered_OP.paragraph_triggered_level != HIGH)
+                {
+                    Button_Triggered_OP.paragraph_triggered_count++;
+                    Button_Triggered_OP.paragraph_triggered_level = HIGH;
+                }
+            }
+            else if (digitalRead(Button_Triggered_OP.button_number) == LOW)
+            {
+                Button_Triggered_OP.low_triggered_count++;
+                if (Button_Triggered_OP.paragraph_triggered_level != LOW)
+                {
+                    Button_Triggered_OP.paragraph_triggered_count++;
+                    Button_Triggered_OP.paragraph_triggered_level = LOW;
+                }
+            }
+            Button_Triggered_OP.cycletime_1 = millis() + 50;
+        }
+
+        if (Button_Triggered_OP.timing_flag == false)
+        {
+            if (millis() > Button_Triggered_OP.cycletime_2)
+            {
+                log_printf("end\n");
+                log_printf("high_triggered_count: %d\n", Button_Triggered_OP.high_triggered_count);
+                log_printf("low_triggered_count: %d\n", Button_Triggered_OP.low_triggered_count);
+                log_printf("paragraph_triggered_count: %d\n", Button_Triggered_OP.paragraph_triggered_count);
+
+                Button_Triggered_OP.trigger_flag = false;
+                Button_Triggered_OP.trigger_start_flag = false;
+
+                if ((Button_Triggered_OP.paragraph_triggered_count == 2)) // single click
+                {
+                    Button_Triggered_OP.current_state = Button_Triggered_OP.gesture::SINGLE_CLICK;
+                    log_printf("key triggered: SINGLE_CLICK\n");
+                    Vibration_Motor_Trigger(150);
+                    return true;
+                }
+                else if ((Button_Triggered_OP.paragraph_triggered_count == 4)) // double click
+                {
+                    Button_Triggered_OP.current_state = Button_Triggered_OP.gesture::DOUBLE_CLICK;
+                    log_printf("key triggered: DOUBLE_CLICK\n");
+                    Vibration_Motor_Trigger(150);
+                    delay(100);
+                    Vibration_Motor_Trigger(150);
+                    return true;
+                }
+                else if ((Button_Triggered_OP.paragraph_triggered_count == 1)) // long press
+                {
+                    Button_Triggered_OP.current_state = Button_Triggered_OP.gesture::LONG_PRESS;
+                    log_printf("key triggered: LONG_PRESS\n");
+                    Vibration_Motor_Trigger(500);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 // callback invoked when central connects
@@ -315,7 +440,7 @@ bool BLE_Uart_Initialization(void)
     // Setup the BLE LED to be enabled on CONNECT
     // Note: This is actually the default behavior, but provided
     // here in case you want to control this LED manually via PIN 19
-    Bluefruit.autoConnLed(true);
+    // Bluefruit.autoConnLed(true);
 
     // Config the peripheral connection with maximum bandwidth
     // more SRAM required by SoftDevice
@@ -438,14 +563,6 @@ void Window_Init(System_Window Window)
         break;
 
     case System_Window::BATTERY_TEST:
-        attachInterrupt(
-            nRF52840_BOOT,
-            []
-            {
-                Nrf52840_Boot_Key_Trigger_Flag = true;
-            },
-            FALLING);
-
         if (Sgm41562->begin() == false)
         {
             log_printf("Sgm41562 init fail\n");
@@ -575,20 +692,14 @@ void Window_Init(System_Window Window)
         Serial2.setPins(GPS_UART_TX, GPS_UART_RX);
         Serial2.begin(38400);
 
+        digitalWrite(GPS_EN, LOW); // gps打开
+
         Gps_Positioning_Flag = false;
         Gps_Positioning_Time = 0;
 
         break;
     case System_Window::LORA_TEST:
     {
-        attachInterrupt(
-            nRF52840_BOOT,
-            []
-            {
-                Nrf52840_Boot_Key_Trigger_Flag = true;
-            },
-            FALLING);
-
         Custom_SPI_3.begin();
         Custom_SPI_3.setClockDivider(SPI_CLOCK_DIV2);
 
@@ -656,24 +767,21 @@ void Window_End(System_Window Window)
         CycleTime = 0;
         break;
     case System_Window::BATTERY_TEST:
-        detachInterrupt(nRF52840_BOOT);
         digitalWrite(BATTERY_MEASUREMENT_CONTROL, LOW); // Turn off battery voltage measurement
-        Sgm41562->end();
         CycleTime = 0;
         break;
     case System_Window::IMU_TEST:
         myIMU.sleep(true);
-        Wire.end();
         pinMode(ICM20948_SDA, INPUT);
         pinMode(ICM20948_SCL, INPUT);
         CycleTime = 0;
         break;
     case System_Window::GPS_TEST:
         Serial2.end();
+        digitalWrite(GPS_EN, HIGH); // gps关闭
         CycleTime = 0;
         break;
     case System_Window::LORA_TEST:
-        detachInterrupt(nRF52840_BOOT);
         radio.sleep();
         Custom_SPI_3.end();
         pinMode(SX1262_MISO, INPUT);
@@ -683,6 +791,8 @@ void Window_End(System_Window Window)
         pinMode(SX1262_DIO1, INPUT);
         pinMode(SX1262_RST, INPUT);
         pinMode(SX1262_BUSY, INPUT);
+        pinMode(SX1262_RF_VC1, INPUT);
+        pinMode(SX1262_RF_VC2, INPUT);
         CycleTime = 0;
         break;
 
@@ -690,66 +800,115 @@ void Window_End(System_Window Window)
         break;
     }
 }
+
 void System_Sleep(bool mode)
 {
     if (mode == true)
     {
         Serial.end();
-        detachInterrupt(TTP223_KEY);
-        pinMode(TTP223_EN, INPUT_PULLDOWN);
 
         pinMode(SCREEN_SDA, INPUT);
         pinMode(SCREEN_SCL, INPUT);
         Wire1.end();
 
+        pinMode(VIBRATION_MOTOR_DATA, INPUT);
+
+        pinMode(GPS_EN, INPUT);
+
+        Sgm41562->end();
+        pinMode(SGM41562_SDA, INPUT);
+        pinMode(SGM41562_SCL, INPUT);
+
         digitalWrite(RT9080_EN, LOW);
         pinMode(RT9080_EN, INPUT_PULLDOWN);
+
+        // 停止广播
+        Bluefruit.Advertising.stop();
     }
     else
     {
-        Serial.begin(115200);
-
         // 3.3V Power ON
         pinMode(RT9080_EN, OUTPUT);
         digitalWrite(RT9080_EN, HIGH);
-        // 电源开启后必须延时
+        delay(100);
+        digitalWrite(RT9080_EN, LOW);
+        delay(100);
+        digitalWrite(RT9080_EN, HIGH);
         delay(100);
 
-        pinMode(TTP223_EN, OUTPUT);
-        digitalWrite(TTP223_EN, HIGH);
+        if (Sgm41562->begin() == false)
+        {
+            log_printf("Sgm41562 init fail\n");
+        }
+        else
+        {
+            log_printf("Sgm41562 init successful\n");
+        }
 
-        attachInterrupt(
-            TTP223_KEY,
-            []
-            {
-                Ttp223_Key_Trigger_Flag = true;
-            },
-            RISING);
+        Serial.begin(115200);
+
+        Bluefruit.Advertising.start(0); // 0 = Don't stop advertising after n seconds
+
+        pinMode(VIBRATION_MOTOR_DATA, OUTPUT);
+        digitalWrite(VIBRATION_MOTOR_DATA, LOW);
+
+        pinMode(GPS_EN, OUTPUT);
+        digitalWrite(GPS_EN, HIGH); // gps关闭
 
         Wire1.setPins(SCREEN_SDA, SCREEN_SCL);
         Wire1.begin();
         if (display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS) == false)
         {
-            log_printf("SSD1306 init fail\n");
+            log_printf("ssd1306 init fail\n");
             System_Op.init_flag.screen = false;
         }
         else
         {
-            log_printf("SSD1306 init successful\n");
+            log_printf("ssd1306 init successful\n");
             System_Op.init_flag.screen = true;
         }
-
-        display.setOffsetCursor(32, 32);
-        display.clearDisplay();
-        display.setTextColor(WHITE);
-
-        display.display();
     }
 }
 
 void setup()
 {
     Serial.begin(115200);
+
+    // 3.3V Power ON
+    pinMode(RT9080_EN, OUTPUT);
+    digitalWrite(RT9080_EN, HIGH);
+    delay(100);
+    digitalWrite(RT9080_EN, LOW);
+    delay(100);
+    digitalWrite(RT9080_EN, HIGH);
+    delay(100);
+
+    Wire1.setPins(SCREEN_SDA, SCREEN_SCL);
+    Wire1.begin();
+    // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+    if (display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS) == false)
+    {
+        log_printf("ssd1306 init fail\n");
+        System_Op.init_flag.screen = false;
+    }
+    else
+    {
+        log_printf("ssd1306 init successful\n");
+        System_Op.init_flag.screen = true;
+    }
+
+    display.setOffsetCursor(32, 32);
+    display.clearDisplay();
+    display.fillScreen(WHITE);
+    display.setTextColor(BLACK);
+    display.setCursor(15, 10);
+    display.printf("LILYGO");
+    display.display();
+
+    display.setTextColor(WHITE);
+
+    delay(1000);
+
     uint8_t serial_init_count = 0;
     while (!Serial)
     {
@@ -760,26 +919,16 @@ void setup()
             break;
         }
     }
-    Serial.println("Ciallo");
+    Serial.println("[T-Impulse_Plus_" + (String)BOARD_VERSION "][" + (String)SOFTWARE_NAME +
+                   "]_firmware_" + (String)SOFTWARE_LASTEDITTIME);
 
-    // 3.3V Power ON
-    pinMode(RT9080_EN, OUTPUT);
-    digitalWrite(RT9080_EN, HIGH);
-    // 电源开启后必须延时
-    delay(100);
+    pinMode(TTP223_KEY, INPUT);
 
-    pinMode(TTP223_EN, OUTPUT);
-    digitalWrite(TTP223_EN, HIGH);
+    pinMode(GPS_EN, OUTPUT);
+    digitalWrite(GPS_EN, HIGH); // gps关闭
 
-    pinMode(GPS_1PPS, INPUT);
-
-    attachInterrupt(
-        TTP223_KEY,
-        []
-        {
-            Ttp223_Key_Trigger_Flag = true;
-        },
-        RISING);
+    pinMode(VIBRATION_MOTOR_DATA, OUTPUT);
+    digitalWrite(VIBRATION_MOTOR_DATA, LOW);
 
     if (BLE_Uart_Initialization() == true)
     {
@@ -800,7 +949,6 @@ void setup()
     {
         log_printf("Sgm41562 init successful\n");
     }
-    Sgm41562->end();
 
     flash.begin();
     flashTransport.setClockSpeed(32000000UL, 0);
@@ -922,7 +1070,6 @@ void setup()
         myIMU.setMagOpMode(AK09916_CONT_MODE_20HZ);
     }
     myIMU.sleep(true);
-    Wire.end();
     pinMode(ICM20948_SDA, INPUT);
     pinMode(ICM20948_SCL, INPUT);
 
@@ -967,55 +1114,100 @@ void setup()
     pinMode(SX1262_DIO1, INPUT);
     pinMode(SX1262_RST, INPUT);
     pinMode(SX1262_BUSY, INPUT);
-
-    Wire1.setPins(SCREEN_SDA, SCREEN_SCL);
-    Wire1.begin();
-    // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-    if (display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS) == false)
-    {
-        log_printf("SSD1306 init fail\n");
-        System_Op.init_flag.screen = false;
-    }
-    else
-    {
-        log_printf("SSD1306 init successful\n");
-        System_Op.init_flag.screen = true;
-    }
-
-    display.setOffsetCursor(32, 32);
-    display.clearDisplay();
-    display.setTextColor(WHITE);
-    display.fillScreen(WHITE);
-    display.display();
-
-    delay(3000);
-    display.clearDisplay();
-    display.display();
+    pinMode(SX1262_RF_VC1, INPUT);
+    pinMode(SX1262_RF_VC2, INPUT);
 
     Window_Init(Current_Window);
+
+    Vibration_Motor_Trigger(150);
 }
 
 void loop()
 {
-    if (Ttp223_Key_Trigger_Flag == true)
+    if (Key_Scanning() == true)
     {
-        delay(100);
-
-        log_printf("TTP223_KEY trigger\n");
-
-        Window_End(Current_Window);
-
-        Current_Window_Count++;
-        if (Current_Window_Count >= (uint8_t)System_Window::END)
+        switch (Button_Triggered_OP.current_state)
         {
-            Current_Window_Count = 0;
+        case Button_Triggered_OP.gesture::SINGLE_CLICK:
+
+            switch (Current_Window)
+            {
+            case System_Window::HOME:
+                System_Op.sleep_count = 0;
+                break;
+            case System_Window::BATTERY_TEST:
+                delay(300);
+
+                Battery_Control_Switch = !Battery_Control_Switch;
+                if (Battery_Control_Switch == true)
+                {
+                    digitalWrite(BATTERY_MEASUREMENT_CONTROL, HIGH); // Enable battery voltage measurement
+                    log_printf("turn on battery voltage measurement\n");
+                }
+                else
+                {
+                    digitalWrite(BATTERY_MEASUREMENT_CONTROL, LOW); // Turn off battery voltage measurement
+                    log_printf("turn off battery voltage measurement\n");
+                }
+                break;
+            case System_Window::LORA_TEST:
+                if (System_Op.init_flag.lora == true)
+                {
+                    delay(300);
+
+                    SX1262_OP.device_1.send_flag = true;
+                    SX1262_OP.device_1.connection_flag = SX1262_OP.state::CONNECTING;
+                    // clear error count watchdog
+                    SX1262_OP.device_1.error_count = 0;
+                    SX1262_OP.device_1.send_data = 0;
+
+                    CycleTime = 0;
+                }
+                break;
+
+            default:
+                break;
+            }
+
+            break;
+        case Button_Triggered_OP.gesture::DOUBLE_CLICK:
+            if (Current_Window == System_Window::HOME)
+            {
+                display.clearDisplay();
+                display.setCursor(0, 10);
+                // display.printf("deep sleep");
+                display.printf("power off");
+                display.display();
+
+                // log_printf("deep sleep\n");
+                log_printf("power off\n");
+
+                delay(1000);
+
+                Sgm41562->set_ship_mode_enable(true);
+
+                System_Sleep(true);
+
+                systemOff(TTP223_KEY, LOW);
+            }
+            break;
+        case Button_Triggered_OP.gesture::LONG_PRESS:
+            Window_End(Current_Window);
+
+            Current_Window_Count++;
+            if (Current_Window_Count >= (uint8_t)System_Window::END)
+            {
+                Current_Window_Count = 0;
+            }
+
+            Current_Window = (System_Window)Current_Window_Count;
+
+            Window_Init(Current_Window);
+            break;
+
+        default:
+            break;
         }
-
-        Current_Window = (System_Window)Current_Window_Count;
-
-        Window_Init(Current_Window);
-
-        Ttp223_Key_Trigger_Flag = false;
     }
 
     switch (Current_Window)
@@ -1045,26 +1237,23 @@ void loop()
             if (System_Op.sleep_count > 10)
             {
                 display.clearDisplay();
-                display.setCursor(15, 10);
-                display.printf("sleep");
+                display.setCursor(0, 10);
+                display.printf("light sleep");
                 display.display();
 
-                log_printf("sleep\n");
+                log_printf("light sleep\n");
 
                 delay(1000);
 
                 System_Sleep(true);
 
-                pinMode(nRF52840_BOOT, INPUT);
-
                 while (1) // 开始睡眠
                 {
                     waitForEvent();
-
-                    systemOff(nRF52840_BOOT, LOW);
+                    // systemOff(TTP223_KEY, LOW);
                     delay(1000);
 
-                    if (digitalRead(nRF52840_BOOT) == LOW)
+                    if (digitalRead(TTP223_KEY) == LOW)
                     {
                         System_Sleep(false);
 
@@ -1076,10 +1265,16 @@ void loop()
                         log_printf("wake up\n");
 
                         Window_Init(Current_Window);
+
+                        Vibration_Motor_Trigger(150);
+
+                        delay(1000);
                         break;
                     }
                 }
             }
+
+            waitForEvent();
 
             CycleTime = millis() + 1000;
         }
@@ -1117,26 +1312,6 @@ void loop()
         break;
 
     case System_Window::BATTERY_TEST:
-        if (Nrf52840_Boot_Key_Trigger_Flag == true)
-        {
-            delay(300);
-
-            log_printf("nRF52840_BOOT trigger\n");
-
-            Battery_Control_Switch = !Battery_Control_Switch;
-            if (Battery_Control_Switch == true)
-            {
-                digitalWrite(BATTERY_MEASUREMENT_CONTROL, HIGH); // Enable battery voltage measurement
-                log_printf("turn on battery voltage measurement\n");
-            }
-            else
-            {
-                digitalWrite(BATTERY_MEASUREMENT_CONTROL, LOW); // Turn off battery voltage measurement
-                log_printf("turn off battery voltage measurement\n");
-            }
-
-            Nrf52840_Boot_Key_Trigger_Flag = false;
-        }
 
         if (millis() > CycleTime)
         {
@@ -1219,6 +1394,7 @@ void loop()
 
             CycleTime = millis() + 1000;
         }
+
         break;
     case System_Window::IMU_TEST:
         if (millis() > CycleTime)
@@ -1252,6 +1428,8 @@ void loop()
             }
             else
             {
+                display.clearDisplay();
+                display.setCursor(0, 0);
                 display.printf("Imu N");
 
                 display.display();
@@ -1372,23 +1550,6 @@ void loop()
     case System_Window::LORA_TEST:
         if (System_Op.init_flag.lora == true)
         {
-            if (Nrf52840_Boot_Key_Trigger_Flag == true)
-            {
-                delay(300);
-
-                log_printf("nRF52840_BOOT trigger\n");
-
-                SX1262_OP.device_1.send_flag = true;
-                SX1262_OP.device_1.connection_flag = SX1262_OP.state::CONNECTING;
-                // clear error count watchdog
-                SX1262_OP.device_1.error_count = 0;
-                SX1262_OP.device_1.send_data = 0;
-
-                CycleTime = 0;
-
-                Nrf52840_Boot_Key_Trigger_Flag = false;
-            }
-
             if (SX1262_OP.device_1.send_flag == true)
             {
                 if (millis() > CycleTime)
@@ -1407,6 +1568,8 @@ void loop()
 
                     // send another one
                     log_printf("[SX1262] send packet\n");
+                    log_printf("[SX1262] frequency: %.03f mhz\n", SX1262_OP.frequency);
+                    log_printf("[SX1262] bandwidth: %.03f khz\n", SX1262_OP.bandwidth);
                     log_printf("[SX1262] send: %u\n", SX1262_OP.device_1.send_data);
                     log_printf("local_mac[0]: %#010X, local_mac[1]: %#010X\n", Local_MAC[0], Local_MAC[1]);
 
@@ -1528,4 +1691,6 @@ void loop()
     default:
         break;
     }
+
+    delay(10);
 }

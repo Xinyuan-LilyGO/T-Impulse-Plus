@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO
  * @Date: 2024-12-06 14:37:43
- * @LastEditTime: 2025-07-17 13:36:45
+ * @LastEditTime: 2025-07-19 13:55:02
  * @License: GPL 3.0
  */
 #pragma once
@@ -57,7 +57,7 @@
 #define RT9080_EN _PINNUM(0, 14)
 
 // GPS
-#define GPS_1PPS _PINNUM(1, 10)
+#define GPS_EN _PINNUM(1, 10)
 #define GPS_UART_RX _PINNUM(1, 11)
 #define GPS_UART_TX _PINNUM(1, 12)
 
@@ -68,7 +68,6 @@
 #define ICM20948_INT _PINNUM(0, 7)
 
 // TTP223
-#define TTP223_EN _PINNUM(0, 13)
 #define TTP223_KEY _PINNUM(1, 4)
 
 // SGM41562
@@ -76,3 +75,6 @@
 #define SGM41562_SDA IIC_SDA_1
 #define SGM41562_SCL IIC_SCL_1
 #define SGM41562_INT _PINNUM(0, 16)
+
+// vibrate
+#define VIBRATION_MOTOR_DATA _PINNUM(0, 22)
