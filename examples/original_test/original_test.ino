@@ -1541,6 +1541,15 @@ void loop()
                     log_printf("gps data: read fail\n");
                 }
             }
+            else
+            {
+                display.clearDisplay();
+                display.setCursor(0, 0);
+                display.printf("Gps E:%ds", Gps_Positioning_Time);
+                display.display();
+
+                log_printf("Gps E:%ds\n", Gps_Positioning_Time);
+            }
 
             CycleTime = millis() + 1000;
         }
