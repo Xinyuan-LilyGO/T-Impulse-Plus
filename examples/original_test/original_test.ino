@@ -1577,8 +1577,8 @@ void loop()
 
                     // send another one
                     log_printf("[SX1262] send packet\n");
-                    log_printf("[SX1262] frequency: %.03f mhz\n", SX1262_OP.frequency);
-                    log_printf("[SX1262] bandwidth: %.03f khz\n", SX1262_OP.bandwidth);
+                    log_printf("[SX1262] frequency: %.03f mhz\n", SX1262_OP.frequency.value);
+                    log_printf("[SX1262] bandwidth: %.03f khz\n", SX1262_OP.bandwidth.value);
                     log_printf("[SX1262] send: %u\n", SX1262_OP.device_1.send_data);
                     log_printf("local_mac[0]: %#010X, local_mac[1]: %#010X\n", Local_MAC[0], Local_MAC[1]);
 
