@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO
  * @Date: 2024-12-06 14:37:43
- * @LastEditTime: 2025-07-19 13:55:02
+ * @LastEditTime: 2025-08-23 11:10:15
  * @License: GPL 3.0
  */
 #pragma once
@@ -12,8 +12,8 @@
 // IIC
 #define IIC_SDA_1 _PINNUM(1, 8)
 #define IIC_SCL_1 _PINNUM(0, 11)
-#define IIC_SDA_2 _PINNUM(0, 15)
-#define IIC_SCL_2 _PINNUM(0, 20)
+#define IIC_SDA_2 _PINNUM(0, 20)
+#define IIC_SCL_2 _PINNUM(0, 15)
 
 // ZD25WQ32CEIGR SPI
 #define ZD25WQ32C_CS _PINNUM(0, 12)
