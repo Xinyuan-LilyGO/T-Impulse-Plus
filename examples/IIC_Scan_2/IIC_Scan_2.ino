@@ -2,7 +2,7 @@
  * @Description: IIC Scan
  * @Author: LILYGO_L
  * @Date: 2024-03-26 15:51:59
- * @LastEditTime: 2025-07-17 15:15:42
+ * @LastEditTime: 2025-08-23 11:01:57
  * @License: GPL 3.0
  */
 #include <Arduino.h>
@@ -14,7 +14,7 @@
 #define SDA IIC_SDA_2
 #define SCL IIC_SCL_2
 
-auto IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(IIC_SDA_1, IIC_SCL_1, &Wire);
+auto IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SDA, SCL, &Wire);
 
 void scan_i2c_device(TwoWire &i2c)
 {
