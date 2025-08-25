@@ -23,7 +23,7 @@
     Extract the Adafruit_nRF52_Bootloader.7z archive, Navigate to the `Adafruit_nRF52_Bootloader` directory and compile it with the following command:
     
         cd /home/xxx/Adafruit_nRF52_Bootloader
-        sudo make CROSS_COMPILE=/home/xxx/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi- BOARD=t_echo_lite_nrf52840 all
+        sudo make CROSS_COMPILE=/home/xxx/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi- BOARD=t_impulse_plus_nrf52840 all
         
     
 5. (Optional)Change ownership of the directory.
@@ -35,4 +35,4 @@
     
     To compile with additional debug information, use the following command:
     
-        sudo make CROSS_COMPILE=/home/xxx/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi- BOARD=t_echo_lite_nrf52840 DEBUG=1 all
+        sudo make CROSS_COMPILE=/home/xxx/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi- BOARD=t_impulse_plus_nrf52840 DEBUG=1 all
