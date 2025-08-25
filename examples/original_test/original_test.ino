@@ -12,7 +12,7 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202507191341"
+#define SOFTWARE_LASTEDITTIME "202508251207"
 #define BOARD_VERSION "v1.0"
 
 enum class System_Window
@@ -1583,8 +1583,10 @@ void loop()
                     log_printf("local_mac[0]: %#010X, local_mac[1]: %#010X\n", Local_MAC[0], Local_MAC[1]);
 
                     radio.transmit(SX1262_OP.send_package, 16);
+
                     radio.startReceive();
 
+                    SX1262_OP.operation_flag = false;
                     SX1262_OP.device_1.send_flag = false;
                 }
             }
