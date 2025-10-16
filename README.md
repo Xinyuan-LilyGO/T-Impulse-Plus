@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2023-09-11 16:13:14
- * @LastEditTime: 2025-10-16 11:40:33
+ * @LastEditTime: 2025-10-16 11:58:41
  * @License: GPL 3.0
 -->
 <h1 align = "center">T-Impulse-Plus</h1>
@@ -35,7 +35,7 @@
 
 ## Describe
 
-T-Impulse Plus is a low-power bracelet developed based on the nRF52840 chip, featuring a more power-efficient design. Its minimum deep sleep power consumption can reach 10μA to 40μA (actual power consumption may vary depending on the onboard components of different boards; the minimum power consumption here is based on the engineering board measured by the LILYGO laboratory). The shutdown power consumption is below 1μA. With a wealth of onboard features such as an inertial sensor, LoRa module, and GPS, along with its exceptional power performance, the T-Impulse Plus delivers outstanding battery life.
+The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip, featuring an optimized power efficiency design. Its minimum deep sleep power consumption can reach 10μA to 40μA (actual power consumption may vary across different boards due to differences in onboard components; the minimum power consumption referenced here is based on engineering boards measured in the LILYGO laboratory). The shutdown power consumption is below 1μA. It is equipped with a range of onboard features, including an inertial sensor, LoRa module, GPS, and more.
 
 ## Preview
 
