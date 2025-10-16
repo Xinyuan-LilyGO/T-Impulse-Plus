@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2025-10-11 13:45:15
- * @LastEditTime: 2025-10-16 11:41:00
+ * @LastEditTime: 2025-10-16 13:46:47
  * @License: GPL 3.0
 -->
 
@@ -75,8 +75,8 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 * 驱动芯片：SSD1306
 * 总线通信协议：IIC
 * 依赖库：
-    >[Adafruit_BusIO-1.16.1](./libraries/Adafruit_BusIO-1.16.1/)   
-    >[Adafruit-GFX-Library-1.11.10](./libraries/Adafruit-GFX-Library-1.11.10/)  
+    >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
+    >[Adafruit-GFX-Library](https://github.com/adafruit/Adafruit-GFX-Library)
 * 相关资料：
     >[SSD1306](./information/SSD1306.pdf)
 
@@ -86,9 +86,9 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 * 芯片：SX1262
 * 总线通信协议：SPI
 * 依赖库：
-    >[RadioLib](./libraries/RadioLib-7.1.2/)  
-    >[Adafruit_BusIO-1.16.1](./libraries/Adafruit_BusIO-1.16.1/)   
-    >[Adafruit_SPIFlash-4.3.4](./libraries/Adafruit_SPIFlash-4.3.4/)  
+    >[RadioLib](https://github.com/jgromes/RadioLib)  
+    >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
+    >[Adafruit_SPIFlash](https://github.com/adafruit/Adafruit_SPIFlash)
 * 相关资料：
     >[S62F](./information/S62F.pdf)  
 
@@ -97,8 +97,8 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 * 芯片：MIA-M10Q
 * 总线通信协议：UART
 * 依赖库：
-    >[TinyGPSPlus-1.0.3a](./libraries/TinyGPSPlus-1.0.3a/)  
-    > [cpp_bus_driver](https://github.com/Llgok/cpp_bus_driver)
+    >[TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)  
+    >[cpp_bus_driver](https://github.com/Llgok/cpp_bus_driver)
 * 相关资料：
     >[MIA-M10Q](./information/MIA-M10Q-00B.pdf)  
 
@@ -107,7 +107,7 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 * 芯片：ICM20948
 * 总线通信协议：IIC
 * 依赖库：
-    >[ICM20948_WE-1.1.11](./libraries/ICM20948_WE-1.1.11/)   
+    >[ICM20948_WE](https://github.com/wollewald/ICM20948_WE)
 * 相关资料：
     >[ICM20948](./information/ICM20948.pdf)  
 
@@ -116,8 +116,8 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 * 芯片：ZD25WQ32CEIGR
 * 总线通信协议：SPI
 * 依赖库：
-    >[Adafruit_BusIO-1.16.1](./libraries/Adafruit_BusIO-1.16.1/)   
-    >[Adafruit_SPIFlash-4.3.4](./libraries/Adafruit_SPIFlash-4.3.4/)  
+    >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
+    >[Adafruit_SPIFlash](https://github.com/adafruit/Adafruit_SPIFlash)  
 * 相关资料：
     >[ZD25WQ32CEIGR](./information/ZD25WQ32CEIGR.pdf)  
 

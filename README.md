@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2023-09-11 16:13:14
- * @LastEditTime: 2025-10-16 11:58:41
+ * @LastEditTime: 2025-10-16 13:46:20
  * @License: GPL 3.0
 -->
 <h1 align = "center">T-Impulse-Plus</h1>
@@ -74,8 +74,8 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 * Driver Chip: SSD1306
 * Bus Communication Protocol: IIC
 * Dependent Libraries:
-    >[Adafruit_BusIO-1.16.1](./libraries/Adafruit_BusIO-1.16.1/)  
-    >[Adafruit-GFX-Library-1.11.10](./libraries/Adafruit-GFX-Library-1.11.10/)
+    >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
+    >[Adafruit-GFX-Library](https://github.com/adafruit/Adafruit-GFX-Library)
 * Related Documentation:
     >[SSD1306](./information/SSD1306.pdf)
 
@@ -85,9 +85,9 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 * Chip: SX1262
 * Bus Communication Protocol: SPI
 * Dependent Libraries:
-    >[RadioLib](./libraries/RadioLib-7.1.2/)  
-    >[Adafruit_BusIO-1.16.1](./libraries/Adafruit_BusIO-1.16.1/)  
-    >[Adafruit_SPIFlash-4.3.4](./libraries/Adafruit_SPIFlash-4.3.4/)
+    >[RadioLib](https://github.com/jgromes/RadioLib)  
+    >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
+    >[Adafruit_SPIFlash](https://github.com/adafruit/Adafruit_SPIFlash)
 * Related Documentation:
     >[S62F](./information/S62F.pdf)
 
@@ -96,8 +96,8 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 * Chip: MIA-M10Q
 * Bus Communication Protocol: UART
 * Dependent Libraries:
-    >[TinyGPSPlus-1.0.3a](./libraries/TinyGPSPlus-1.0.3a/)  
-    > [cpp_bus_driver](https://github.com/Llgok/cpp_bus_driver)
+    >[TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)  
+    >[cpp_bus_driver](https://github.com/Llgok/cpp_bus_driver)
 * Related Documentation:
     >[MIA-M10Q](./information/MIA-M10Q-00B.pdf)
 
@@ -106,7 +106,7 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 * Chip: ICM20948
 * Bus Communication Protocol: IIC
 * Dependent Libraries:
-    >[ICM20948_WE-1.1.11](./libraries/ICM20948_WE-1.1.11/)
+    >[ICM20948_WE](https://github.com/wollewald/ICM20948_WE)
 * Related Documentation:
     >[ICM20948](./information/ICM20948.pdf)
 
@@ -115,8 +115,8 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 * Chip: ZD25WQ32CEIGR
 * Bus Communication Protocol: SPI
 * Dependent Libraries:
-    >[Adafruit_BusIO-1.16.1](./libraries/Adafruit_BusIO-1.16.1/)  
-    >[Adafruit_SPIFlash-4.3.4](./libraries/Adafruit_SPIFlash-4.3.4/)
+    >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
+    >[Adafruit_SPIFlash](https://github.com/adafruit/Adafruit_SPIFlash)  
 * Related Documentation:
     >[ZD25WQ32CEIGR](./information/ZD25WQ32CEIGR.pdf)
 
