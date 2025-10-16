@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2023-09-11 16:13:14
- * @LastEditTime: 2025-10-16 11:27:13
+ * @LastEditTime: 2025-10-16 11:40:33
  * @License: GPL 3.0
 -->
 <h1 align = "center">T-Impulse-Plus</h1>
@@ -260,3 +260,4 @@ For pin definitions, please refer to the configuration file:
 <br />
 
 ## Project
+* [T-Impulse-Plus_V1.0](./project/T-Impulse-Plus_V1.0.pdf)

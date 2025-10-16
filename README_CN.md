@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2025-10-11 13:45:15
- * @LastEditTime: 2025-10-16 11:13:04
+ * @LastEditTime: 2025-10-16 11:41:00
  * @License: GPL 3.0
 -->
 
@@ -260,4 +260,5 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 <br />
 
 ## 项目
+* [T-Impulse-Plus_V1.0](./project/T-Impulse-Plus_V1.0.pdf)
 
