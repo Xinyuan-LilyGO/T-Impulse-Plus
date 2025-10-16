@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2023-09-11 16:13:14
- * @LastEditTime: 2025-10-16 13:46:20
+ * @LastEditTime: 2025-10-16 14:56:45
  * @License: GPL 3.0
 -->
 <h1 align = "center">T-Impulse-Plus</h1>
@@ -230,6 +230,8 @@ For pin definitions, please refer to the configuration file:
 <br />
 
 [pin_config.h](./libraries/private_library/pin_config.h)
+
+## RelatedTests
 
 ### Power Dissipation
 
