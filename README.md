@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2023-09-11 16:13:14
- * @LastEditTime: 2025-10-16 11:18:02
+ * @LastEditTime: 2025-10-16 11:27:13
  * @License: GPL 3.0
 -->
 <h1 align = "center">T-Impulse-Plus</h1>
@@ -101,7 +101,7 @@ T-Impulse Plus is a low-power bracelet developed based on the nRF52840 chip, fea
 * Related Documentation:
     >[MIA-M10Q](./information/MIA-M10Q-00B.pdf)
 
-### 5. Inertial Sensor
+### 5. IMU
 
 * Chip: ICM20948
 * Bus Communication Protocol: IIC
