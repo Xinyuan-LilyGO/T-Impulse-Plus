@@ -12,8 +12,10 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202508251207"
+#define SOFTWARE_LASTEDITTIME "202510311640"
 #define BOARD_VERSION "v1.0"
+
+#define MAX_UART_RX_BUFFER_SIZE 1024
 
 enum class System_Window
 {
@@ -213,6 +215,9 @@ size_t CycleTime_2 = 0;
 bool Gps_Positioning_Flag = false;
 size_t Gps_Positioning_Time = 0;
 
+uint8_t Uart_Rx_Buffer[MAX_UART_RX_BUFFER_SIZE] = {0};
+size_t Uart_Rx_Count = 0;
+
 /* UART Serivce: 6E400001-B5A3-F393-E0A9-E50E24DCCA9E
  * UART RXD    : 6E400002-B5A3-F393-E0A9-E50E24DCCA9E
  * UART TXD    : 6E400003-B5A3-F393-E0A9-E50E24DCCA9E
@@ -266,7 +271,7 @@ void log_printf(const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    char buffer[512];
+    char buffer[1024];
     vsnprintf(buffer, sizeof(buffer), fmt, args);
 
     Serial.print(buffer);
@@ -1442,6 +1447,11 @@ void loop()
         break;
 
     case System_Window::GPS_TEST:
+        while (Serial2.available() && Uart_Rx_Count < MAX_UART_RX_BUFFER_SIZE)
+        {
+            Uart_Rx_Buffer[Uart_Rx_Count++] = Serial2.read();
+        }
+
         if (millis() > CycleTime)
         {
             if (Gps_Positioning_Flag == false)
@@ -1450,23 +1460,12 @@ void loop()
             }
 
             // 检查Serial2是否有可用数据
-            if (Serial2.available())
+            if (Uart_Rx_Count >= MAX_UART_RX_BUFFER_SIZE)
             {
-                // 读取Serial2所有可用数据到缓冲区
-                const size_t bufferSize = 512;
-
-                std::unique_ptr<uint8_t[]> buffer(new uint8_t[bufferSize]);
-                size_t bytesRead = 0;
-
-                while (Serial2.available() && bytesRead < bufferSize)
-                {
-                    buffer[bytesRead++] = Serial2.read();
-                }
-
-                buffer[bytesRead] = '\0';
+                Uart_Rx_Buffer[Uart_Rx_Count] = '\0';
 
                 // 打印RMC的相关信息
-                log_printf("---begin---\n%s \n---end---\n", buffer.get());
+                log_printf("---begin---\n%s \n---end---\n", Uart_Rx_Buffer);
 
                 log_printf("---RMC---\n");
 
@@ -1488,7 +1487,7 @@ void loop()
                 }
 
                 // 调用parse_rmc_info进行解码
-                if (Nrf52840_Gnss->parse_rmc_info(buffer.get(), bytesRead, rmc) == true)
+                if (Nrf52840_Gnss->parse_rmc_info(Uart_Rx_Buffer, Uart_Rx_Count, rmc) == true)
                 {
                     log_printf("location status: %s\n", (rmc.location_status).c_str());
 
@@ -1540,6 +1539,8 @@ void loop()
 
                     log_printf("gps data: read fail\n");
                 }
+
+                Uart_Rx_Count = 0;
             }
             else
             {
@@ -1551,7 +1552,7 @@ void loop()
                 log_printf("Gps E:%ds\n", Gps_Positioning_Time);
             }
 
-            CycleTime = millis() + 1000;
+            CycleTime = millis() + 3000;
         }
 
         break;
