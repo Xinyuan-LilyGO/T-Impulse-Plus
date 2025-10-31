@@ -12,7 +12,7 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202510311640"
+#define SOFTWARE_LASTEDITTIME "202510311742"
 #define BOARD_VERSION "v1.0"
 
 #define MAX_UART_RX_BUFFER_SIZE 1024
@@ -1456,7 +1456,7 @@ void loop()
         {
             if (Gps_Positioning_Flag == false)
             {
-                Gps_Positioning_Time++;
+                Gps_Positioning_Time += 3;
             }
 
             // 检查Serial2是否有可用数据
