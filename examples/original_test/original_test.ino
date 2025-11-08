@@ -12,7 +12,7 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202510311742"
+#define SOFTWARE_LASTEDITTIME "202511081434"
 #define BOARD_VERSION "v1.0"
 
 #define MAX_UART_RX_BUFFER_SIZE 1024
@@ -953,6 +953,8 @@ void setup()
     else
     {
         log_printf("Sgm41562 init successful\n");
+
+        Sgm41562->set_enter_ship_time(Cpp_Bus_Driver::Sgm41562xx::Enter_Ship_Time ::WAIT_1S);
     }
 
     flash.begin();
@@ -1191,9 +1193,16 @@ void loop()
 
                 Sgm41562->set_ship_mode_enable(true);
 
-                System_Sleep(true);
+                while (1)
+                {
+                    log_printf("power off\n");
+                    delay(2000);
+                    Sgm41562->set_ship_mode_enable(true);
+                }
 
-                systemOff(TTP223_KEY, LOW);
+                // System_Sleep(true);
+
+                // systemOff(TTP223_KEY, LOW);
             }
             break;
         case Button_Triggered_OP.gesture::LONG_PRESS:
