@@ -12,7 +12,7 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202511081434"
+#define SOFTWARE_LASTEDITTIME "202511131456"
 #define BOARD_VERSION "v1.0"
 
 #define MAX_UART_RX_BUFFER_SIZE 1024
@@ -700,7 +700,7 @@ void Window_Init(System_Window Window)
         digitalWrite(GPS_EN, LOW); // gps打开
 
         Gps_Positioning_Flag = false;
-        Gps_Positioning_Time = 0;
+        Gps_Positioning_Time = -5;
 
         break;
     case System_Window::LORA_TEST:
@@ -1245,6 +1245,10 @@ void loop()
             display.printf("%02d:%02d:%02d", hours, minutes, seconds);
             log_printf("system time: %02d:%02d:%02d\n", hours, minutes, seconds);
 
+            log_printf(("[T-Impulse_Plus_" + (String)BOARD_VERSION "][" + (String)SOFTWARE_NAME +
+                        "]_firmware_" + (String)SOFTWARE_LASTEDITTIME + "\n")
+                           .c_str());
+
             display.display();
 
             System_Op.sleep_count++;
@@ -1458,14 +1462,15 @@ void loop()
     case System_Window::GPS_TEST:
         while (Serial2.available() && Uart_Rx_Count < MAX_UART_RX_BUFFER_SIZE)
         {
-            Uart_Rx_Buffer[Uart_Rx_Count++] = Serial2.read();
+            Uart_Rx_Buffer[Uart_Rx_Count] = Serial2.read();
+            Uart_Rx_Count++;
         }
 
         if (millis() > CycleTime)
         {
             if (Gps_Positioning_Flag == false)
             {
-                Gps_Positioning_Time += 3;
+                Gps_Positioning_Time += 5;
             }
 
             // 检查Serial2是否有可用数据
@@ -1561,7 +1566,7 @@ void loop()
                 log_printf("Gps E:%ds\n", Gps_Positioning_Time);
             }
 
-            CycleTime = millis() + 3000;
+            CycleTime = millis() + 5000;
         }
 
         break;
