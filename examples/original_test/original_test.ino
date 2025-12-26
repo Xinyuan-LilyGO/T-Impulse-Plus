@@ -12,7 +12,7 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202511141340"
+#define SOFTWARE_LASTEDITTIME "202512261442"
 #define BOARD_VERSION "v1.0"
 
 #define MAX_UART_RX_BUFFER_SIZE 1024
@@ -215,7 +215,7 @@ size_t CycleTime_2 = 0;
 bool Gps_Positioning_Flag = false;
 size_t Gps_Positioning_Time = 0;
 
-uint8_t Uart_Rx_Buffer[MAX_UART_RX_BUFFER_SIZE] = {0};
+auto Uart_Rx_Buffer = std::make_unique<uint8_t[]>(MAX_UART_RX_BUFFER_SIZE);
 size_t Uart_Rx_Count = 0;
 
 /* UART Serivce: 6E400001-B5A3-F393-E0A9-E50E24DCCA9E
@@ -748,6 +748,7 @@ void Window_Init(System_Window Window)
 
         break;
     }
+
     default:
         break;
     }
@@ -1479,7 +1480,7 @@ void loop()
                 Uart_Rx_Buffer[MAX_UART_RX_BUFFER_SIZE - 1] = '\0';
 
                 // 打印RMC的相关信息
-                log_printf("---begin---\n%s \n---end---\n", Uart_Rx_Buffer);
+                log_printf("---begin---\n%s \n---end---\n", Uart_Rx_Buffer.get());
 
                 log_printf("---RMC---\n");
 
@@ -1501,7 +1502,7 @@ void loop()
                 }
 
                 // 调用parse_rmc_info进行解码
-                if (Nrf52840_Gnss->parse_rmc_info(Uart_Rx_Buffer, Uart_Rx_Count, rmc) == true)
+                if (Nrf52840_Gnss->parse_rmc_info(Uart_Rx_Buffer.get(), Uart_Rx_Count, rmc) == true)
                 {
                     log_printf("location status: %s\n", (rmc.location_status).c_str());
 
