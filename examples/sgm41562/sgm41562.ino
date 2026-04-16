@@ -2,7 +2,7 @@
  * @Description: IIC Scan
  * @Author: LILYGO_L
  * @Date: 2024-03-26 15:51:59
- * @LastEditTime: 2025-07-17 18:16:22
+ * @LastEditTime: 2026-04-16 16:37:55
  * @License: GPL 3.0
  */
 #include <Arduino.h>
@@ -13,7 +13,7 @@
 
 auto Sgm41562_IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SGM41562_SDA, SGM41562_SCL, &Wire);
 
-auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS, DEFAULT_CPP_BUS_DRIVER_VALUE);
+auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS);
 
 void setup()
 {

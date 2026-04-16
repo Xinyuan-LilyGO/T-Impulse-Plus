@@ -264,7 +264,7 @@ auto Nrf52840_Gnss = std::make_unique<Cpp_Bus_Driver::Gnss>();
 
 auto Sgm41562_IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SGM41562_SDA, SGM41562_SCL, &Wire);
 
-auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS, DEFAULT_CPP_BUS_DRIVER_VALUE);
+auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS);
 
 void log_printf(const char *fmt, ...)
 {
