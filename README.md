@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2023-09-11 16:13:14
- * @LastEditTime: 2025-10-16 14:56:45
+ * @LastEditTime: 2026-05-05 13:49:56
  * @License: GPL 3.0
 -->
 <h1 align = "center">T-Impulse-Plus</h1>
@@ -69,15 +69,15 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 
 ### 2. Display
 
-* Resolution: 128x64px
+* Resolution: 64x32px
 * Display Type: OLED
-* Driver Chip: SSD1306
+* Driver Chip: SSD1315
 * Bus Communication Protocol: IIC
 * Dependent Libraries:
     >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
     >[Adafruit-GFX-Library](https://github.com/adafruit/Adafruit-GFX-Library)
 * Related Documentation:
-    >[SSD1306](./information/SSD1306.pdf)
+    >[SSD1315](./information/SSD1315.pdf)
 
 ### 3. LORA
 

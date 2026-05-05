@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO_L
  * @Date: 2025-10-11 13:45:15
- * @LastEditTime: 2025-10-16 13:46:47
+ * @LastEditTime: 2026-05-05 13:46:11
  * @License: GPL 3.0
 -->
 
@@ -70,15 +70,15 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 
 ### 2. 屏幕
 
-* 分辨率：128x64px
+* 分辨率：64x32px
 * 屏幕类型：OLED
-* 驱动芯片：SSD1306
+* 驱动芯片：SSD1315
 * 总线通信协议：IIC
 * 依赖库：
     >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
     >[Adafruit-GFX-Library](https://github.com/adafruit/Adafruit-GFX-Library)
 * 相关资料：
-    >[SSD1306](./information/SSD1306.pdf)
+    >[SSD1315](./information/SSD1315.pdf)
 
 ### 3. LORA
 

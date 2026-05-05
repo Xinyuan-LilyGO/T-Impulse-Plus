@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO
  * @Date: 2024-12-06 14:37:43
- * @LastEditTime: 2025-08-23 11:10:15
+ * @LastEditTime: 2026-05-05 13:50:21
  * @License: GPL 3.0
  */
 #pragma once
@@ -25,7 +25,7 @@
 #define ZD25WQ32C_IO2 _PINNUM(0, 8)
 #define ZD25WQ32C_IO3 _PINNUM(0, 26)
 
-// SSD1306
+// SSD1315
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define SCREEN_ADDRESS 0x3C
