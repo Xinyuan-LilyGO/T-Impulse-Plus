@@ -2,7 +2,7 @@
  * @Description: IIC Scan
  * @Author: LILYGO_L
  * @Date: 2024-03-26 15:51:59
- * @LastEditTime: 2025-07-21 17:17:46
+ * @LastEditTime: 2026-07-17 08:59:39
  * @License: GPL 3.0
  */
 #include <Arduino.h>
@@ -18,12 +18,12 @@ void setup()
     pinMode(RT9080_EN, OUTPUT);
     digitalWrite(RT9080_EN, HIGH);
 
-    pinMode(TTP223_KEY, INPUT_PULLDOWN);
+    pinMode(TTP223_KEY, INPUT);
 }
 
 void loop()
 {
-    if (digitalRead(TTP223_KEY) == HIGH)
+    if (digitalRead(TTP223_KEY) == LOW)
     {
         delay(300);
 
