@@ -19,7 +19,7 @@ size_t Gps_Positioning_Time = 0;
 auto Uart_Rx_Buffer = std::make_unique<uint8_t[]>(MAX_UART_RX_BUFFER_SIZE);
 size_t Uart_Rx_Count = 0;
 
-auto Nrf52840_Gnss = std::make_shared<Cpp_Bus_Driver::Gnss>();
+auto Nrf52840_Gnss = std::make_shared<cpp_bus_driver::GnssParser>();
 
 void setup()
 {
@@ -73,7 +73,7 @@ void loop()
             printf("---RMC---\n");
 
             // 创建Rmc对象用于存储解析结果
-            Cpp_Bus_Driver::Gnss::Rmc rmc;
+            cpp_bus_driver::GnssParser::Rmc rmc;
 
             if (Gps_Positioning_Flag == false)
             {
@@ -84,8 +84,8 @@ void loop()
                 printf("Gps Y:%d s\n", Gps_Positioning_Time);
             }
 
-            // 调用parse_rmc_info进行解码
-            if (Nrf52840_Gnss->parse_rmc_info(Uart_Rx_Buffer.get(), Uart_Rx_Count, rmc) == true)
+            // 调用 ParseRmcInfo 进行解码
+            if (Nrf52840_Gnss->ParseRmcInfo(Uart_Rx_Buffer.get(), Uart_Rx_Count, rmc) == true)
             {
                 printf("location status: %s\n", (rmc.location_status).c_str());
 

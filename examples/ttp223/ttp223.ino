@@ -2,7 +2,7 @@
  * @Description: IIC Scan
  * @Author: LILYGO_L
  * @Date: 2024-03-26 15:51:59
- * @LastEditTime: 2026-07-17 08:59:39
+ * @LastEditTime: 2026-07-25 15:44:06
  * @License: GPL 3.0
  */
 #include <Arduino.h>

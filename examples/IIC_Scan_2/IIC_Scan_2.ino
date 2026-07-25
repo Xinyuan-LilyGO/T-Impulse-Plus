@@ -14,7 +14,7 @@
 #define SDA IIC_SDA_2
 #define SCL IIC_SCL_2
 
-auto IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SDA, SCL, &Wire);
+auto IIC_Bus = std::make_shared<cpp_bus_driver::HardwareI2c2>(SDA, SCL, &Wire);
 
 void scan_i2c_device(TwoWire &i2c)
 {
@@ -45,7 +45,7 @@ void scan_i2c_device(TwoWire &i2c)
 void Iic_Scan(void)
 {
     std::vector<uint8_t> address;
-    if (IIC_Bus->scan_7bit_address(&address) == true)
+    if (IIC_Bus->Scan7bitAddress(&address) == true)
     {
         for (size_t i = 0; i < address.size(); i++)
         {
@@ -63,7 +63,7 @@ void setup()
     pinMode(RT9080_EN, OUTPUT);
     digitalWrite(RT9080_EN, HIGH);
 
-    IIC_Bus->begin();
+    IIC_Bus->Init();
 
     // Wire.setPins(SDA, SCL);
     // Wire.begin();

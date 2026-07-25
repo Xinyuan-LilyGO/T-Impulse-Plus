@@ -260,11 +260,13 @@ SX1262_Operator SX1262_OP;
 SPIClass Custom_SPI_3(NRF_SPIM3, SX1262_MISO, SX1262_SCLK, SX1262_MOSI);
 SX1262 radio = new Module(SX1262_CS, SX1262_DIO1, SX1262_RST, SX1262_BUSY, Custom_SPI_3);
 
-auto Nrf52840_Gnss = std::make_unique<Cpp_Bus_Driver::Gnss>();
+auto nrf52840_gnss = std::make_unique<cpp_bus_driver::GnssParser>();
 
-auto Sgm41562_IIC_Bus = std::make_shared<Cpp_Bus_Driver::Hardware_Iic_2>(SGM41562_SDA, SGM41562_SCL, &Wire);
+auto sgm41562_i2c_bus = std::make_shared<cpp_bus_driver::HardwareI2c2>(
+    SGM41562_SDA, SGM41562_SCL, &Wire);
 
-auto Sgm41562 = std::make_unique<Cpp_Bus_Driver::Sgm41562xx>(Sgm41562_IIC_Bus, SGM41562_ADDRESS);
+auto sgm41562 = std::make_unique<cpp_bus_driver::Sgm41562xx>(
+    sgm41562_i2c_bus, SGM41562_ADDRESS);
 
 void log_printf(const char *fmt, ...)
 {
@@ -568,7 +570,7 @@ void Window_Init(System_Window Window)
         break;
 
     case System_Window::BATTERY_TEST:
-        if (Sgm41562->begin() == false)
+        if (sgm41562->Init() == false)
         {
             log_printf("Sgm41562 init fail\n");
         }
@@ -821,7 +823,7 @@ void System_Sleep(bool mode)
 
         pinMode(GPS_EN, INPUT);
 
-        Sgm41562->end();
+        sgm41562->Deinit();
         pinMode(SGM41562_SDA, INPUT);
         pinMode(SGM41562_SCL, INPUT);
 
@@ -842,7 +844,7 @@ void System_Sleep(bool mode)
         digitalWrite(RT9080_EN, HIGH);
         delay(100);
 
-        if (Sgm41562->begin() == false)
+        if (sgm41562->Init() == false)
         {
             log_printf("Sgm41562 init fail\n");
         }
@@ -947,7 +949,7 @@ void setup()
         log_printf("BLE_Uart_Initialization fail\n");
     }
 
-    if (Sgm41562->begin() == false)
+    if (sgm41562->Init() == false)
     {
         log_printf("Sgm41562 init fail\n");
     }
@@ -955,7 +957,11 @@ void setup()
     {
         log_printf("Sgm41562 init successful\n");
 
-        Sgm41562->set_enter_ship_time(Cpp_Bus_Driver::Sgm41562xx::Enter_Ship_Time ::WAIT_1S);
+        if (!sgm41562->SetShippingModeDelay(
+                cpp_bus_driver::Sgm41562xx::ShippingModeDelay::k1Second))
+        {
+            log_printf("Sgm41562 set shipping mode delay fail\n");
+        }
     }
 
     flash.begin();
@@ -1192,13 +1198,13 @@ void loop()
 
                 delay(1000);
 
-                Sgm41562->set_ship_mode_enable(true);
+                sgm41562->SetShippingModeEnable(true);
 
                 while (1)
                 {
                     log_printf("power off\n");
                     delay(2000);
-                    Sgm41562->set_ship_mode_enable(true);
+                    sgm41562->SetShippingModeEnable(true);
                 }
 
                 // System_Sleep(true);
@@ -1361,53 +1367,49 @@ void loop()
 
             log_printf("---sgm41562---\n");
 
-            Cpp_Bus_Driver::Sgm41562xx::Irq_Status irq_status;
-            if (Sgm41562->parse_irq_status(Sgm41562->get_irq_flag(), irq_status))
+            cpp_bus_driver::Sgm41562xx::IrqStatus irq_status;
+            if (sgm41562->GetIrqStatus(irq_status))
             {
                 log_printf("irq status:\n");
-                log_printf("  input power fault: %d\n", irq_status.Input_power_fault_flag);
-                // log_printf("  thermal shutdown: %d\n", irq_status.thermal_shutdown_flag);
-                log_printf("  battery over voltage fault: %d\n", irq_status.battery_over_voltage_fault_flag);
-                // log_printf("  safety timer expiration fault: %d\n", irq_status.safety_timer_expiration_fault_flag);
-                // log_printf("  ntc exceeding hot: %d\n", irq_status.ntc_exceeding_hot_flag);
-                // log_printf("  ntc exceeding cold: %d\n", irq_status.ntc_exceeding_cold_flag);
+                log_printf(
+                    "  input power fault: %d\n", irq_status.input_power_fault);
+                log_printf("  battery over voltage fault: %d\n",
+                    irq_status.battery_overvoltage_fault);
             }
             else
             {
-                log_printf("failed to parse irq status\n");
+                log_printf("failed to read irq status\n");
             }
 
-            Cpp_Bus_Driver::Sgm41562xx::Chip_Status chip_status;
-            if (Sgm41562->parse_chip_status(Sgm41562->get_chip_status(), chip_status))
+            cpp_bus_driver::Sgm41562xx::ChipStatus chip_status;
+            if (sgm41562->GetChipStatus(chip_status))
             {
                 log_printf("chip status:\n");
-                // log_printf("  watchdog expiration: %d\n", chip_status.watchdog_expiration_flag);
                 log_printf("  charge status: ");
                 switch (chip_status.charge_status)
                 {
-                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::NOT_CHARGING:
+                case cpp_bus_driver::Sgm41562xx::ChargeStatus::kNotCharging:
                     log_printf("not_charging\n");
                     break;
-                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::PRECHARGE:
+                case cpp_bus_driver::Sgm41562xx::ChargeStatus::kPrecharge:
                     log_printf("precharge\n");
                     break;
-                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::CHARGE:
+                case cpp_bus_driver::Sgm41562xx::ChargeStatus::kCharging:
                     log_printf("charge\n");
                     break;
-                case Cpp_Bus_Driver::Sgm41562xx::Charge_Status::CHARGE_DONE:
+                case cpp_bus_driver::Sgm41562xx::ChargeStatus::kChargeComplete:
                     log_printf("charge_done\n");
                     break;
                 default:
                     log_printf("unknown\n");
                     break;
                 }
-                // log_printf("  power path management mode: %d\n", chip_status.device_in_power_path_management_mode_flag);
-                log_printf("  input power status: %d\n", chip_status.input_power_status_flag);
-                // log_printf("  thermal regulation: %d\n", chip_status.thermal_regulation_status_flag);
+                log_printf("  input power status: %d\n",
+                    chip_status.input_power_good);
             }
             else
             {
-                log_printf("failed to parse chip status\n");
+                log_printf("failed to read chip status\n");
             }
             log_printf("\n");
 
@@ -1485,7 +1487,7 @@ void loop()
                 log_printf("---RMC---\n");
 
                 // 创建Rmc对象用于存储解析结果
-                Cpp_Bus_Driver::Gnss::Rmc rmc;
+                cpp_bus_driver::GnssParser::Rmc rmc;
 
                 display.clearDisplay();
                 display.setCursor(0, 0);
@@ -1501,8 +1503,9 @@ void loop()
                     log_printf("Gps Y:%d s\n", Gps_Positioning_Time);
                 }
 
-                // 调用parse_rmc_info进行解码
-                if (Nrf52840_Gnss->parse_rmc_info(Uart_Rx_Buffer.get(), Uart_Rx_Count, rmc) == true)
+                // 调用 ParseRmcInfo 进行解码
+                if (nrf52840_gnss->ParseRmcInfo(
+                        Uart_Rx_Buffer.get(), Uart_Rx_Count, rmc) == true)
                 {
                     log_printf("location status: %s\n", (rmc.location_status).c_str());
 
