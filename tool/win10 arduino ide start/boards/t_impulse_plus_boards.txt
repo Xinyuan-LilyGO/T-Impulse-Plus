@@ -1,0 +1,60 @@
+# >>> T-IMPULSE-PLUS BOARD START >>>
+# -----------------------------------
+# LilyGo T-Impulse Plus nRF52840
+# -----------------------------------
+t_impulse_plus.name=LilyGo T-Impulse Plus nRF52840
+
+# VID/PID
+t_impulse_plus.vid.0=0x239A
+t_impulse_plus.pid.0=0x8029
+t_impulse_plus.vid.1=0x239A
+t_impulse_plus.pid.1=0x0029
+
+# Upload
+t_impulse_plus.bootloader.tool=bootburn
+t_impulse_plus.upload.tool=nrfutil
+t_impulse_plus.upload.protocol=nrfutil
+t_impulse_plus.upload.use_1200bps_touch=true
+t_impulse_plus.upload.wait_for_upload_port=true
+t_impulse_plus.upload.maximum_size=815104
+t_impulse_plus.upload.maximum_data_size=237568
+
+# Build
+t_impulse_plus.build.mcu=cortex-m4
+t_impulse_plus.build.f_cpu=64000000
+t_impulse_plus.build.board=NRF52840_T_IMPULSE_PLUS
+t_impulse_plus.build.core=nRF5
+t_impulse_plus.build.variant=t_impulse_plus_nrf52840
+t_impulse_plus.build.usb_manufacturer="LilyGo"
+t_impulse_plus.build.usb_product="T-Impulse-Plus-nRF52840"
+t_impulse_plus.build.extra_flags=-DNRF52840_XXAA {build.flags.usb}
+t_impulse_plus.build.ldscript=nrf52840_s140_v6.ld
+t_impulse_plus.build.openocdscript=scripts/openocd/daplink_nrf52.cfg
+t_impulse_plus.build.vid=0x239A
+t_impulse_plus.build.pid=0x8029
+
+# SoftDevice
+t_impulse_plus.menu.softdevice.s140v6=S140 6.1.1
+t_impulse_plus.menu.softdevice.s140v6.build.sd_name=s140
+t_impulse_plus.menu.softdevice.s140v6.build.sd_version=6.1.1
+t_impulse_plus.menu.softdevice.s140v6.build.sd_fwid=0x00B6
+
+# Debug Level
+t_impulse_plus.menu.debug.l0=Level 0 (Release)
+t_impulse_plus.menu.debug.l0.build.debug_flags=-DCFG_DEBUG=0
+t_impulse_plus.menu.debug.l1=Level 1 (Error Message)
+t_impulse_plus.menu.debug.l1.build.debug_flags=-DCFG_DEBUG=1
+t_impulse_plus.menu.debug.l2=Level 2 (Full Debug)
+t_impulse_plus.menu.debug.l2.build.debug_flags=-DCFG_DEBUG=2
+t_impulse_plus.menu.debug.l3=Level 3 (Segger SystemView)
+t_impulse_plus.menu.debug.l3.build.debug_flags=-DCFG_DEBUG=3
+t_impulse_plus.menu.debug.l3.build.sysview_flags=-DCFG_SYSVIEW=1
+
+# Debug Port
+t_impulse_plus.menu.debug_output.serial=Serial
+t_impulse_plus.menu.debug_output.serial.build.logger_flags=-DCFG_LOGGER=0
+t_impulse_plus.menu.debug_output.serial1=Serial1
+t_impulse_plus.menu.debug_output.serial1.build.logger_flags=-DCFG_LOGGER=1 -DCFG_TUSB_DEBUG=CFG_DEBUG
+t_impulse_plus.menu.debug_output.rtt=Segger RTT
+t_impulse_plus.menu.debug_output.rtt.build.logger_flags=-DCFG_LOGGER=2 -DCFG_TUSB_DEBUG=CFG_DEBUG -DSEGGER_RTT_MODE_DEFAULT=SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL
+# <<< T-IMPULSE-PLUS BOARD END <<<

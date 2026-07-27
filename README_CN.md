@@ -196,17 +196,19 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 
 4. 打开菜单栏“[文件](image/6.png)”->“[首选项](image/6.png)”，找到“[项目文件夹位置](image/7.png)”这一栏，将项目目录下的“libraries”文件夹里的所有库文件连带文件夹复制粘贴到这个目录下的“libraries”里边。
 
-5. 在 "工具 "菜单中选择正确的设置，如下表所示。
+5. 关闭 Arduino IDE，打开 `tool/win10 arduino ide start`，运行 `python t_impulse_plus_arduino_setup.py`。脚本会检测已安装的 Adafruit nRF52 版本、安装 T-Impulse-Plus 专属开发板和 variant，并创建或更新 `platform.local.txt`，加入 `compiler.libraries.ldflags=-lstdc++`。如果安装了多个版本，请按脚本提示选择，然后重启 Arduino IDE。其他命令行选项请查看该工具目录下的中英文 README。
+
+6. 在“工具”菜单中选择正确的设置，如下表所示。
 
 | Setting                               | Value                                 |
 | :-------------------------------: | :-------------------------------: |
-| Board                                 | Nordic nRF52840 DK           |
+| Board                                 | LilyGo T-Impulse Plus nRF52840 |
 
-6. 选择正确的端口。
+7. 选择正确的端口。
 
-7. 开启引导下载模式：按一下RST芯片复位按键后松开等待1秒后（一定要等待1秒）再按一下RST按键后松开，观察到电脑端有新盘符弹出，即已进入引导下载模式。
+8. 开启引导下载模式：按一下RST芯片复位按键后松开等待1秒后（一定要等待1秒）再按一下RST按键后松开，观察到电脑端有新盘符弹出，即已进入引导下载模式。
 
-8. 点击右上角“<kbd>[√](image/8.png)</kbd>”进行编译，如果编译无误，将单片机连接电脑，点击右上角“<kbd>[→](image/9.png)</kbd>”即可进行烧录。
+9. 点击右上角“<kbd>[√](image/8.png)</kbd>”进行编译，如果编译无误，将单片机连接电脑，点击右上角“<kbd>[→](image/9.png)</kbd>”即可进行烧录。
 
 #### JLINK烧录firmware和bootloader
 1. 安装软件 [nRF-Connect-for-Desktop](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop/Download#infotabs)

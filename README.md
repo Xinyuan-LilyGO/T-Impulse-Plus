@@ -195,18 +195,20 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 3. Open the "Tools" menu bar at the top right -> Select "Board" -> "Board Manager", find or search for "Adafruit_nRF52", and download the board file with the author named "Adafruit". Then return to the "Board" menu bar, select the board type under the "Adafruit_nRF52" board, and the selected board type is determined by the "board = xxx" header under the [env] directory in the "platformio.ini" file. If there is no corresponding board, you need to manually add the board under the "board" directory in the project folder. (If "Adafruit_nRF52" cannot be found, you need to open Preferences -> Add `https://www.adafruit.com/package_adafruit_index.json` to "Additional Board Manager URLs")
     
 4. Open the menu bar "[File](image/6.png)" -> "[Preferences](image/6.png)", find the "[Project Folder Location](image/7.png)" section, and copy and paste all the library files along with the folders in the "libraries" folder under the project directory into the "libraries" folder in this directory.
+
+5. Close Arduino IDE, open `tool/win10 arduino ide start`, and run `python t_impulse_plus_arduino_setup.py`. The script detects installed Adafruit nRF52 versions, installs the T-Impulse-Plus board/variant, and creates or updates `platform.local.txt` with `compiler.libraries.ldflags=-lstdc++`. Follow the script prompt if multiple versions are installed, then restart Arduino IDE. See the README files in that tool directory for command-line options.
     
-5. Select the correct settings in the "Tools" menu, as shown in the table below.
+6. Select the correct settings in the "Tools" menu, as shown in the table below.
     
 | Setting                               | Value                                 |
 | :-------------------------------: | :-------------------------------: |
-| Board                                 | Nordic nRF52840 DK           |
+| Board                                 | LilyGo T-Impulse Plus nRF52840 |
 
-6.  Select the correct port.
+7. Select the correct port.
 
-7. Entering Bootloader Download Mode: Press and release the RST (reset) chip button, wait for 1 second (this wait is essential), then press and release the RST button again. Once a new drive letter appears on the computer, it indicates that the device has successfully entered the bootloader download mode.
+8. Entering Bootloader Download Mode: Press and release the RST (reset) chip button, wait for 1 second (this wait is essential), then press and release the RST button again. Once a new drive letter appears on the computer, it indicates that the device has successfully entered the bootloader download mode.
 
-8.  Click the top right "[√](image/8.png)" to compile. If there are no errors, connect the microcontroller to the computer and click the top right "[→](image/9.png)" to start the flashing process.
+9. Click the top right "[√](image/8.png)" to compile. If there are no errors, connect the microcontroller to the computer and click the top right "[→](image/9.png)" to start the flashing process.
 
 #### JLINK Flashing Firmware and Bootloader
 
