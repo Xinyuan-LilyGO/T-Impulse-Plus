@@ -12,7 +12,7 @@
 #include "wiring.h"
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202512261442"
+#define SOFTWARE_LASTEDITTIME "202607270912"
 #define BOARD_VERSION "v1.0"
 
 #define MAX_UART_RX_BUFFER_SIZE 1024
@@ -105,7 +105,7 @@ struct SX1262_Operator
 
     struct
     {
-        float value = 910.0;
+        float value = 923.0;
         bool change_flag = false;
     } frequency;
     struct
