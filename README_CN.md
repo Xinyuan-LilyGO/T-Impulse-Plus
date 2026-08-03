@@ -90,7 +90,14 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
     >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
     >[Adafruit_SPIFlash](https://github.com/adafruit/Adafruit_SPIFlash)
 * 相关资料：
-    >[S62F](./information/S62F.pdf)  
+    >[S62F](./information/S62F.pdf)
+    >[S62F 应用说明](./information/S62F_ApplicationNote_Ver_D.pdf)
+
+#### S62F 硬件配置
+
+* 射频开关：T-Impulse-Plus 使用 AcSiP 控制模式 A，由 nRF52840 直接控制 `RF_VC1`（`P1.13`）和 `RF_VC2`（`P1.07`）。`DIO2`（`P1.15`）是单独引出的信号，不能替代这两个控制引脚。发射时设置 `RF_VC1/RF_VC2` 为 `HIGH/LOW`，接收时设置为 `LOW/HIGH`。
+* TCXO：内置 32 MHz TCXO 由 SX1262 的 `DIO3` 内部控制。初始化射频模块时，应将 `tcxoVoltage` 明确设置为 `3.0 V`。
+* 稳压器：`VREG` 与 `DCC_SW` 通过 15 uH 电感连接，应使用 DC-DC 稳压模式（`useRegulatorLDO = false`）。
 
 ### 4. GPS
 
@@ -113,7 +120,7 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 
 ### 6. Flash
 
-* 芯片：ZD25WQ32CEIGR
+* 兼容芯片：ZD25WQ32C（`BA 60 16`）和 ZD25Q32D（`BA 40 16`）
 * 总线通信协议：SPI
 * 依赖库：
     >[Adafruit_BusIO](https://github.com/adafruit/Adafruit_BusIO)  
