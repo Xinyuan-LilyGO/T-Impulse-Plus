@@ -2,7 +2,7 @@
  * @Description: None
  * @Author: LILYGO
  * @Date: 2024-12-06 14:37:43
- * @LastEditTime: 2026-05-05 13:50:21
+ * @LastEditTime: 2026-10-30 11:26:00
  * @License: GPL 3.0
  */
 #pragma once
@@ -75,6 +75,17 @@
 #define ICM20948_SDA IIC_SDA_1
 #define ICM20948_SCL IIC_SCL_1
 #define ICM20948_INT _PINNUM(0, 7)
+
+// V1.1 版本 IMU：QMI8658A + QMC6309
+// 两个传感器与 V1.0 版本的 ICM20948 共用 NRF_I2C2 总线。
+#define QMI8658_SDA IIC_SDA_1
+#define QMI8658_SCL IIC_SCL_1
+#define QMI8658_INT _PINNUM(0, 22) // SYS_INT
+#define QMI8658_ADDRESS 0x6A
+
+#define QMC6309_SDA IIC_SDA_1
+#define QMC6309_SCL IIC_SCL_1
+#define QMC6309_ADDRESS 0x7C
 
 // TTP223
 #define TTP223_KEY _PINNUM(1, 4)

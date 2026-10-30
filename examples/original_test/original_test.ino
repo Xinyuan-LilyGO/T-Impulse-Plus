@@ -1,3 +1,11 @@
+/*
+ * @Description: T-Impulse Plus 工厂测试
+ * @Author: LILYGO_L
+ * @Date: 2024-12-06 14:37:43
+ * @LastEditTime: 2026-10-30 11:26:00
+ * @License: GPL 3.0
+ */
+
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -11,12 +19,24 @@
 #include "RadioLib.h"
 #include "cpp_bus_driver_library.h"
 #include "wiring.h"
+#include <math.h>
+
+// SensorLib 和 cpp_bus_driver 都提供 C++11 的 make_unique 兼容实现。
+// 仅在本文件中隔离 SensorLib 头文件的名称，避免修改第三方库源码。
+#define make_unique sensorlib_make_unique
+#include "SensorQMI8658.hpp"
+#include "SensorQMC6309.hpp"
+#undef make_unique
 
 #define SOFTWARE_NAME "original_test"
-#define SOFTWARE_LASTEDITTIME "202607270912"
+#define SOFTWARE_LASTEDITTIME "202610301126"
 #define BOARD_VERSION "v1.0"
 
 #define MAX_UART_RX_BUFFER_SIZE 1024
+
+#ifndef LORA_FREQ_MHZ
+#define LORA_FREQ_MHZ 923.0
+#endif
 
 enum class System_Window
 {
@@ -88,7 +108,7 @@ struct SX1262_Operator
 
     struct
     {
-        float value = 923.0;
+        float value = LORA_FREQ_MHZ;
         bool change_flag = false;
     } frequency;
     struct
@@ -237,6 +257,88 @@ Adafruit_SPIFlash flash(&flashTransport);
  * ICM20948_WE myIMU = ICM20948_WE(&SPI, CS_PIN, spi);  -> uses SPI / passes the SPI object, spi is just a flag, see SPI example
  */
 ICM20948_WE myIMU = ICM20948_WE(&Wire, ICM20948_ADDRESS);
+SensorQMI8658 qmi8658;
+SensorQMC6309 qmc6309;
+enum class ImuKind { kNone, kIcm20948, kQmi8658Qmc6309 };
+ImuKind Imu_Kind = ImuKind::kNone;
+
+void log_printf(const char *fmt, ...);
+
+bool InitQmi8658Qmc6309()
+{
+    log_printf("QMI8658 address: 0x%02X\n", QMI8658_ADDRESS);
+    if (!qmi8658.begin(Wire, QMI8658_ADDRESS, QMI8658_SDA, QMI8658_SCL))
+    {
+        log_printf("QMI8658 init fail\n");
+        return false;
+    }
+    if (!qmc6309.begin(Wire, QMC6309_ADDRESS, QMC6309_SDA, QMC6309_SCL))
+    {
+        log_printf("QMC6309 init fail at address: 0x%02X\n", QMC6309_ADDRESS);
+        return false;
+    }
+    if (!qmi8658.configAccelerometer(SensorQMI8658::ACC_RANGE_2G,
+                                     SensorQMI8658::ACC_ODR_125Hz,
+                                     SensorQMI8658::LPF_MODE_3) ||
+        !qmi8658.configGyroscope(SensorQMI8658::GYR_RANGE_256DPS,
+                                  SensorQMI8658::GYR_ODR_112_1Hz,
+                                  SensorQMI8658::LPF_MODE_3) ||
+        !qmi8658.disableSyncSampleMode() ||
+        !qmc6309.setOperationMode(OperationMode::CONTINUOUS_MEASUREMENT) ||
+        !qmc6309.setFullScaleRange(MagFullScaleRange::FS_32G) ||
+        !qmc6309.setOversamplingRate(MagOverSampleRatio::OSR_8) ||
+        !qmc6309.setLowPassFilter(MagLowPassFilter::LPF_8) ||
+        !qmc6309.setSetResetMode(SensorQMC6309::MagSetResetMode::SET_AND_RESET_ON))
+    {
+        log_printf("QMI8658/QMC6309 configuration fail\n");
+        return false;
+    }
+    qmi8658.enableAccelerometer();
+    qmi8658.enableGyroscope();
+    Imu_Kind = ImuKind::kQmi8658Qmc6309;
+    log_printf("QMI8658 + QMC6309 init successful\n");
+    return true;
+}
+
+void SleepQmi8658Qmc6309()
+{
+    qmi8658.disableAccelerometer();
+    qmi8658.disableGyroscope();
+    qmc6309.setOperationMode(OperationMode::SUSPEND);
+}
+
+bool ReadQmi8658Qmc6309(float &pitch, float &roll, float &yaw)
+{
+    if (!qmi8658.getDataReady())
+    {
+        return false;
+    }
+
+    IMUdata acceleration = {};
+    IMUdata angular_velocity = {};
+    if (!qmi8658.getAccelerometer(acceleration.x, acceleration.y, acceleration.z) ||
+        !qmi8658.getGyroscope(angular_velocity.x, angular_velocity.y, angular_velocity.z))
+    {
+        return false;
+    }
+
+    pitch = atan2f(-acceleration.x,
+                   sqrtf(acceleration.y * acceleration.y + acceleration.z * acceleration.z)) *
+            (180.0f / PI);
+    roll = atan2f(acceleration.y, acceleration.z) * (180.0f / PI);
+
+    MagnetometerData magnetic = {};
+    if (!qmc6309.readData(magnetic) || magnetic.overflow)
+    {
+        yaw = NAN;
+    }
+    else
+    {
+        yaw = atan2f(magnetic.magnetic_field.y, magnetic.magnetic_field.x) *
+              (180.0f / PI);
+    }
+    return true;
+}
 
 SX1262_Operator SX1262_OP;
 
@@ -582,8 +684,15 @@ void Window_Init(System_Window Window)
 
         if (myIMU.init() == false)
         {
-            log_printf("ICM20948 AG init fail\n");
-            System_Op.init_flag.imu = false;
+            if (!InitQmi8658Qmc6309())
+            {
+                log_printf("No supported IMU found\n");
+                System_Op.init_flag.imu = false;
+            }
+            else
+            {
+                System_Op.init_flag.imu = true;
+            }
         }
         else
         {
@@ -594,6 +703,7 @@ void Window_Init(System_Window Window)
                 System_Op.init_flag.imu = false;
             }
 
+            Imu_Kind = ImuKind::kIcm20948;
             log_printf("ICM20948 init successful\n");
             System_Op.init_flag.imu = true;
 
@@ -764,7 +874,14 @@ void Window_End(System_Window Window)
         CycleTime = 0;
         break;
     case System_Window::IMU_TEST:
-        myIMU.sleep(true);
+        if (Imu_Kind == ImuKind::kIcm20948)
+        {
+            myIMU.sleep(true);
+        }
+        else if (Imu_Kind == ImuKind::kQmi8658Qmc6309)
+        {
+            SleepQmi8658Qmc6309();
+        }
         pinMode(ICM20948_SDA, INPUT);
         pinMode(ICM20948_SCL, INPUT);
         CycleTime = 0;
@@ -975,8 +1092,15 @@ void setup()
     Wire.begin();
     if (myIMU.init() == false)
     {
-        log_printf("ICM20948 AG init fail\n");
-        System_Op.init_flag.imu = false;
+        if (!InitQmi8658Qmc6309())
+        {
+            log_printf("No supported IMU found\n");
+            System_Op.init_flag.imu = false;
+        }
+        else
+        {
+            System_Op.init_flag.imu = true;
+        }
     }
     else
     {
@@ -987,6 +1111,7 @@ void setup()
             System_Op.init_flag.imu = false;
         }
 
+        Imu_Kind = ImuKind::kIcm20948;
         log_printf("ICM20948 init successful\n");
         System_Op.init_flag.imu = true;
 
@@ -1068,7 +1193,14 @@ void setup()
          */
         myIMU.setMagOpMode(AK09916_CONT_MODE_20HZ);
     }
-    myIMU.sleep(true);
+    if (Imu_Kind == ImuKind::kIcm20948)
+    {
+        myIMU.sleep(true);
+    }
+    else if (Imu_Kind == ImuKind::kQmi8658Qmc6309)
+    {
+        SleepQmi8658Qmc6309();
+    }
     pinMode(ICM20948_SDA, INPUT);
     pinMode(ICM20948_SCL, INPUT);
 
@@ -1409,23 +1541,40 @@ void loop()
         {
             if (System_Op.init_flag.imu == true)
             {
-                myIMU.readSensor();
-                xyzFloat gValue = myIMU.getGValues();
-                xyzFloat angle = myIMU.getAngles();
-                float pitch = myIMU.getPitch();
-                float roll = myIMU.getRoll();
-
-                // obtain the x and y values of the magnetometer to calculate the heading angle (Yaw)
-                xyzFloat magValues = myIMU.getMagValues();
-                float yaw = atan2(magValues.y, magValues.x) * (180.0 / M_PI); // calculate heading angle
+                float pitch;
+                float roll;
+                float yaw;
+                if (Imu_Kind == ImuKind::kIcm20948)
+                {
+                    myIMU.readSensor();
+                    pitch = myIMU.getPitch();
+                    roll = myIMU.getRoll();
+                    const xyzFloat magnetic = myIMU.getMagValues();
+                    yaw = atan2f(magnetic.y, magnetic.x) * (180.0f / PI);
+                }
+                else
+                {
+                    if (!ReadQmi8658Qmc6309(pitch, roll, yaw))
+                    {
+                        CycleTime = millis() + 100;
+                        break;
+                    }
+                }
 
                 display.clearDisplay();
                 display.setCursor(0, 0);
-                display.printf("Imu Y p:%.01f", pitch);
+                display.printf("P:%.1f deg", pitch);
                 display.setCursor(0, 10);
-                display.printf("r:%.01f", roll);
+                display.printf("R:%.1f deg", roll);
                 display.setCursor(0, 20);
-                display.printf("y:%.01f", yaw);
+                if (isnan(yaw))
+                {
+                    display.printf("Y:--");
+                }
+                else
+                {
+                    display.printf("Y:%.1f deg", yaw);
+                }
 
                 display.display();
 

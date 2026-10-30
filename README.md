@@ -110,7 +110,9 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 
 ### 5. IMU
 
-* Chip: ICM20948
+* V1.0: ICM20948 nine-axis IMU
+* V1.1: QMI8658A six-axis IMU + QMC6309 three-axis magnetometer
+* The [`imu`](./examples/imu) example automatically detects either hardware configuration at startup.
 * Bus Communication Protocol: IIC
 * Dependent Libraries:
     >[ICM20948_WE](https://github.com/wollewald/ICM20948_WE)
@@ -159,7 +161,7 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 | [GPS](./examples/GPS) | <p align="center">![alt text][supported]  |  |  |
 | [gps_2](./examples/gps_2) | <p align="center">![alt text][supported]  |  |  |
 | [GPS_Full](./examples/GPS_Full) | <p align="center">![alt text][supported]  |  |  |
-| [ICM20948](./examples/ICM20948) | <p align="center">![alt text][supported]  |  |  |
+| [imu](./examples/imu) | <p align="center">![alt text][supported]  |  |  |
 | [IIC_Scan_2](./examples/IIC_Scan_2) | <p align="center">![alt text][supported]  |  |  |
 | [original_test](./examples/original_test) |<p align="center">![alt text][supported]  | Product factory original testing |  |
 | [sgm41562](./examples/sgm41562) | <p align="center">![alt text][supported]  |  |  |
@@ -176,7 +178,7 @@ The T-Impulse Plus is a low-power wristband developed based on the nRF52840 chip
 
 | Firmware | Description | Picture |
 | ------  | ------  | ------ |
-| [original_test](./firmware/[T-Impulse-Plus_V1.0][original_test(lora_freq_910mhz)]_firmware/)| Product factory original testing |  |
+| [original_test](./firmware/[T-Impulse-Plus-V1.0-V1.1][original_test]_firmware/)| Factory test firmware for V1.0 and V1.1 |  |
 
 ### IDE and Flashing
 
@@ -246,7 +248,7 @@ For pin definitions, please refer to the configuration file:
 
 | Firmware | Software | Description | Picture |
 | ------  | ------  | ------ | ------ | 
-| [original_test](./firmware/[T-Impulse-Plus_V1.0][original_test(lora_freq_910mhz)]_firmware) | `original_test` | Minimum Power Consumption: 0.77μA <br /> For more information, please check the [Power Consumption Test Log](./relevant_test/PowerConsumptionTestLog_[T-Impulse-Plus]_20250825.pdf) | <p align="center"> <img src="image/13.jpg" alt="example" width="100%"> </p> |
+| [original_test](./firmware/[T-Impulse-Plus-V1.0-V1.1][original_test]_firmware/) | `original_test` | Minimum Power Consumption: 0.77μA <br /> For more information, please check the [Power Consumption Test Log](./relevant_test/PowerConsumptionTestLog_[T-Impulse-Plus]_20250825.pdf) | <p align="center"> <img src="image/13.jpg" alt="example" width="100%"> </p> |
 
 ## FAQ
 

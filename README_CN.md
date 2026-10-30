@@ -111,7 +111,9 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 
 ### 5. 惯性传感器
 
-* 芯片：ICM20948
+* V1.0：ICM20948 九轴惯性传感器
+* V1.1：QMI8658A 六轴惯性传感器 + QMC6309 三轴磁力计
+* [`imu`](./examples/imu) 示例会在启动时自动识别新旧两种硬件配置。
 * 总线通信协议：IIC
 * 依赖库：
     >[ICM20948_WE](https://github.com/wollewald/ICM20948_WE)
@@ -160,7 +162,7 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 | [GPS](./examples/GPS) | <p align="center">![alt text][supported]  |  |  |
 | [gps_2](./examples/gps_2) | <p align="center">![alt text][supported]  |  |  |
 | [GPS_Full](./examples/GPS_Full) | <p align="center">![alt text][supported]  |  |  |
-| [ICM20948](./examples/ICM20948) | <p align="center">![alt text][supported]  |  |  |
+| [imu](./examples/imu) | <p align="center">![alt text][supported]  |  |  |
 | [IIC_Scan_2](./examples/IIC_Scan_2) | <p align="center">![alt text][supported]  |  |  |
 | [original_test](./examples/original_test) |<p align="center">![alt text][supported]  | 出厂测试程序 |  |
 | [sgm41562](./examples/sgm41562) | <p align="center">![alt text][supported]  |  |  |
@@ -177,7 +179,7 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 
 | Firmware | Description | Picture |
 | ------  | ------  | ------ |
-| [original_test](./firmware/[T-Impulse-Plus_V1.0][original_test(lora_freq_910mhz)]_firmware/)| 出厂测试程序 |  |
+| [original_test](./firmware/[T-Impulse-Plus-V1.0-V1.1][original_test]_firmware/)| 兼容 V1.0 和 V1.1 的出厂测试固件 |  |
 
 ### IDE和烧录
 
@@ -244,7 +246,7 @@ T-Impulse-Plus是基于nRF52840芯片开发的低功耗手环，拥有更低的�
 ### 功耗
 | Firmware | Software| Description | Picture |
 | ------  | ------  | ------ | ------ | 
-| [original_test](./firmware/[T-Impulse-Plus_V1.0][original_test(lora_freq_910mhz)]_firmware) | `original_test` | 最低功耗: 0.77uA <br /> 更多信息请查看 [功耗测试日志](./relevant_test/PowerConsumptionTestLog_[T-Impulse-Plus]_20250825.pdf) | <p align="center"> <img src="image/13.jpg" alt="example" width="100%"> </p> |
+| [original_test](./firmware/[T-Impulse-Plus-V1.0-V1.1][original_test]_firmware/) | `original_test` | 最低功耗: 0.77uA <br /> 更多信息请查看 [功耗测试日志](./relevant_test/PowerConsumptionTestLog_[T-Impulse-Plus]_20250825.pdf) | <p align="center"> <img src="image/13.jpg" alt="example" width="100%"> </p> |
 
 ## 常见问题
 
